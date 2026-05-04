@@ -506,7 +506,7 @@ async function showProfile(player) {
     nameEl.appendChild(document.createTextNode((player.FirstName || player.FirstNamme || "") + " " + player.LastName));
     const ratingEl = document.getElementById("playerRating");
     if (player.Rtg_Nat && player.Rtg_Nat !== "0" && player.Rtg_Nat !== "") {
-        ratingEl.innerText = (player.isNational ? "National Rating: " : "CMP: ") + player.Rtg_Nat;
+        ratingEl.innerText = (player.isNational ? "National Rating: " : "CMP Rating: ") + player.Rtg_Nat;
         ratingEl.style.display = "block";
     } else { ratingEl.style.display = "none"; }
     playerHistory = [];
