@@ -335,7 +335,7 @@
             </div>
         </div>
 
-        <h3 style="margin: 0; font-size: 18px;">Rating History</h3>
+        <h3 style="margin: 0; font-size: 18px;">Chessmates Philippine Rating History</h3>
 
         <div class="card">
             <table class="history-table">
@@ -478,7 +478,7 @@ async function showProfile(player) {
     nameEl.appendChild(document.createTextNode((player.FirstName || player.FirstNamme || "") + " " + player.LastName));
     const ratingEl = document.getElementById("playerRating");
     if (player.Rtg_Nat && player.Rtg_Nat !== "0" && player.Rtg_Nat !== "") {
-        ratingEl.innerText = (player.isNational ? "National: " : "CMP: ") + player.Rtg_Nat;
+        ratingEl.innerText = (player.isNational ? "National Rating: " : "CMP: ") + player.Rtg_Nat;
         ratingEl.style.display = "block";
     } else { ratingEl.style.display = "none"; }
     playerHistory = [];
