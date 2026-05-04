@@ -42,7 +42,7 @@
         background: rgba(30, 41, 59, 0.8);
         backdrop-filter: blur(8px);
         border-bottom: 1px solid var(--border);
-        padding: 12px 5%;
+        padding: 12px 16px;
         display: flex;
         align-items: center;
         gap: 16px;
@@ -52,7 +52,7 @@
     }
 
     .header-logo {
-        height: 24px;
+        height: 28px;
     }
 
     nav {
@@ -66,10 +66,10 @@
         gap: 6px;
         color: var(--text-muted);
         text-decoration: none;
-        font-size: 13px;
-        font-weight: 500;
-        padding: 6px 10px;
-        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 8px 12px;
+        border-radius: 8px;
         transition: 0.2s;
     }
 
@@ -80,7 +80,7 @@
 
     .container {
         flex: 1;
-        padding: 40px 16px;
+        padding: 24px 16px;
         max-width: 1000px;
         margin: 0 auto;
         width: 100%;
@@ -88,29 +88,33 @@
     }
 
     .hero-logo {
-        max-width: 240px;
-        margin-bottom: 24px;
-        border-radius: 8px;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        max-width: 180px;
+        width: 100%;
+        margin-bottom: 20px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
     .hero-title {
-        font-size: 28px;
+        font-size: 32px;
         font-weight: 800;
         color: var(--orange);
         margin: 0 0 8px 0;
         letter-spacing: -0.02em;
+        line-height: 1.2;
     }
 
     .hero-subtitle {
         color: var(--text-muted);
-        font-size: 15px;
+        font-size: 16px;
         margin-bottom: 32px;
+        line-height: 1.5;
     }
 
     .search-container {
         display: flex;
-        gap: 10px;
+        flex-direction: column;
+        gap: 12px;
         max-width: 600px;
         margin: 0 auto;
         position: relative;
@@ -118,7 +122,7 @@
 
     .search-input-wrapper {
         position: relative;
-        flex: 1;
+        width: 100%;
     }
 
     .search-icon {
@@ -131,11 +135,11 @@
 
     input {
         width: 100%;
-        padding: 12px 14px 12px 40px;
-        font-size: 15px;
+        padding: 16px 16px 16px 44px;
+        font-size: 16px;
         background: var(--bg-card);
         border: 1px solid var(--border);
-        border-radius: 10px;
+        border-radius: 12px;
         color: white;
         outline: none;
         transition: 0.2s;
@@ -144,23 +148,24 @@
 
     input:focus {
         border-color: var(--orange);
-        box-shadow: 0 0 0 2px rgba(255, 165, 0, 0.1);
+        box-shadow: 0 0 0 3px rgba(255, 165, 0, 0.1);
     }
 
     .search-btn {
         background: var(--orange);
         color: #000;
         border: none;
-        padding: 0 20px;
-        border-radius: 10px;
+        padding: 16px;
+        border-radius: 12px;
         font-weight: 700;
-        font-size: 15px;
+        font-size: 16px;
         cursor: pointer;
         transition: 0.2s;
+        width: 100%;
     }
 
     .results {
-        margin-top: 20px;
+        margin-top: 12px;
         text-align: left;
         max-width: 600px;
         margin-left: auto;
@@ -171,13 +176,14 @@
         max-height: 300px;
         overflow-y: auto;
         display: none;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
     }
 
     .result-item {
-        padding: 12px 16px;
+        padding: 16px;
         border-bottom: 1px solid var(--border);
         cursor: pointer;
-        font-size: 15px;
+        font-size: 16px;
     }
 
     .profile {
@@ -188,15 +194,16 @@
     .back-btn {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        padding: 8px 14px;
+        gap: 8px;
+        padding: 10px 16px;
         background: var(--bg-card);
         border: 1px solid var(--border);
         color: var(--text-main);
-        border-radius: 8px;
+        border-radius: 10px;
         cursor: pointer;
         margin-bottom: 24px;
-        font-size: 13px;
+        font-size: 14px;
+        font-weight: 600;
     }
 
     .profile-header {
@@ -206,9 +213,10 @@
     }
 
     .profile-name {
-        font-size: 24px;
+        font-size: 28px;
         font-weight: 800;
         margin: 0;
+        line-height: 1.2;
     }
 
     .profile-title {
@@ -217,56 +225,58 @@
 
     .profile-rating {
         color: var(--orange);
-        font-size: 16px;
-        font-weight: 600;
-        margin-top: 4px;
+        font-size: 20px;
+        font-weight: 700;
+        margin-top: 8px;
     }
 
     .card {
         background: var(--bg-card);
         border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 16px;
-        margin-top: 20px;
+        border-radius: 16px;
+        padding: 20px;
+        margin-top: 16px;
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .history-table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 300px;
+        min-width: 280px;
     }
 
     .history-table th {
         text-align: left;
         color: var(--text-muted);
-        font-size: 11px;
+        font-size: 12px;
         text-transform: uppercase;
         padding-bottom: 12px;
+        letter-spacing: 0.05em;
     }
 
     .history-table td {
-        padding: 10px 0;
+        padding: 14px 0;
         border-top: 1px solid var(--border);
-        font-size: 14px;
+        font-size: 15px;
     }
 
-    .change-up { color: #4ADE80; font-weight: 600; }
-    .change-down { color: #F87171; font-weight: 600; }
+    .change-up { color: #4ADE80; font-weight: 700; }
+    .change-down { color: #F87171; font-weight: 700; }
 
     footer {
-        padding: 30px 16px;
+        padding: 40px 20px;
         text-align: center;
         border-top: 1px solid var(--border);
         color: var(--text-muted);
-        font-size: 12px;
+        font-size: 13px;
     }
 
-    @media (max-width: 640px) {
-        .search-container { flex-direction: column; }
-        .search-btn { padding: 12px; width: 100%; }
-        .hero-title { font-size: 24px; }
-        .profile-name { font-size: 22px; }
+    @media (min-width: 641px) {
+        .search-container { flex-direction: row; }
+        .search-btn { width: auto; padding: 0 30px; }
+        .hero-title { font-size: 40px; }
+        .container { padding: 60px 20px; }
     }
 </style>
 </head>
