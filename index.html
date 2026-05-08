@@ -428,10 +428,18 @@ async function getLatestFile() {
             cachedData = parseCSV(await csvRes.text());
         }
         const rapidFile = data.find(f => f.name.toLowerCase() === "phrapid.csv");
+        const ratingFile = data.find(f => ["phrating.csv", "phratings.csv"].includes(f.name.toLowerCase()));
+
+        let combinedFallback = [];
         if (rapidFile) {
             const rapidRes = await fetch(rapidFile.download_url);
-            fallbackData = parseCSV(await rapidRes.text());
+            combinedFallback = combinedFallback.concat(parseCSV(await rapidRes.text()));
         }
+        if (ratingFile) {
+            const ratingRes = await fetch(ratingFile.download_url);
+            combinedFallback = combinedFallback.concat(parseCSV(await ratingRes.text()));
+        }
+        fallbackData = combinedFallback;
     } catch (e) { console.error("Initialization failed", e); }
 }
 
@@ -474,8 +482,18 @@ function performSearch(query) {
 
         return ln.startsWith(query) || id.startsWith(query);
     };
-    let results = cachedData.filter(filterFunc);
-    if (results.length === 0) results = fallbackData.filter(filterFunc).map(p => ({ ...p, isNational: true }));
+    let latestResults = cachedData.filter(filterFunc);
+    let fallbackResults = fallbackData.filter(filterFunc).map(p => ({ ...p, isNational: true }));
+
+    // Create a Set of ID_No from latestResults for quick lookup to avoid duplicates
+    const latestIds = new Set(latestResults.map(p => p.ID_No));
+
+    // Filter fallbackResults to exclude those already found in the latest CSV
+    const uniqueFallbackResults = fallbackResults.filter(p => !latestIds.has(p.ID_No));
+
+    // Combine both results, prioritizing the latest data
+    let results = [...latestResults, ...uniqueFallbackResults];
+
     if (results.length > 0) {
         container.innerHTML = "";
         container.style.display = "block";
