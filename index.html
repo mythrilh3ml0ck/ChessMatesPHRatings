@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <meta name="theme-color" content="#0B1120">
 <title>Chessmates Philippine Rating</title>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -23,21 +22,10 @@ box-sizing:border-box;
 -webkit-tap-highlight-color:transparent;
 }
 
-html{
--webkit-text-size-adjust:100%;
-scroll-behavior:smooth;
-}
-
 body{
 margin:0;
 font-family:Arial,sans-serif;
 background:#0B1120;
-background-image:
-linear-gradient(to bottom,rgba(11,17,32,.92),rgba(11,17,32,1)),
-url('https://images.unsplash.com/photo-1529699211952-734e80c4d42b?auto=format&fit=crop&q=80&w=2000');
-background-size:cover;
-background-position:center;
-background-repeat:no-repeat;
 color:#fff;
 min-height:100vh;
 overflow-x:hidden;
@@ -46,19 +34,18 @@ overflow-x:hidden;
 header{
 position:sticky;
 top:0;
-z-index:100;
-background:rgba(30,41,59,.85);
-backdrop-filter:blur(8px);
+background:rgba(30,41,59,.9);
 border-bottom:1px solid var(--border);
 padding:14px;
 text-align:center;
+z-index:100;
 }
 
 .header-title{
 margin:0;
 font-size:18px;
-font-weight:700;
 color:var(--orange);
+font-weight:700;
 }
 
 .container{
@@ -74,31 +61,26 @@ max-width:220px;
 display:block;
 margin:0 auto 20px auto;
 border-radius:16px;
-box-shadow:0 10px 30px rgba(0,0,0,.5);
 }
 
 .hero-title{
-margin:0 0 10px 0;
-font-size:clamp(26px,7vw,48px);
-font-weight:800;
 text-align:center;
 color:var(--orange);
+font-size:32px;
+margin:0;
+font-weight:800;
 }
 
 .hero-subtitle{
-margin:0 auto 24px auto;
-font-size:15px;
 text-align:center;
 color:var(--text-muted);
-max-width:500px;
-line-height:1.5;
+margin:10px 0 20px;
 }
 
 .search-container{
 width:100%;
 max-width:600px;
 margin:auto;
-position:relative;
 }
 
 .search-input-wrapper{
@@ -110,50 +92,38 @@ position:absolute;
 left:14px;
 top:50%;
 transform:translateY(-50%);
-color:var(--text-muted);
 }
 
 input{
 width:100%;
 padding:15px 15px 15px 44px;
-background:var(--bg-card);
-border:1px solid var(--border);
 border-radius:14px;
+border:1px solid var(--border);
+background:var(--bg-card);
 color:#fff;
 font-size:16px;
 outline:none;
 }
 
-input:focus{
-border-color:var(--orange);
-}
-
 .results{
 display:none;
-margin-top:12px;
+margin-top:10px;
 background:var(--bg-card);
 border:1px solid var(--border);
-border-radius:14px;
-overflow:hidden;
+border-radius:12px;
 max-height:300px;
 overflow-y:auto;
-box-shadow:0 10px 25px rgba(0,0,0,.35);
 }
 
 .result-item{
-padding:16px 18px;
-font-size:15px;
-text-align:left;
+padding:14px 16px;
 border-bottom:1px solid var(--border);
 cursor:pointer;
-}
-
-.result-item:last-child{
-border-bottom:none;
+text-align:left;
 }
 
 .result-item:hover{
-background:rgba(255,255,255,.03);
+background:rgba(255,255,255,0.05);
 }
 
 .profile{
@@ -161,49 +131,40 @@ display:none;
 }
 
 .back-btn{
-display:inline-flex;
-align-items:center;
-gap:8px;
-padding:10px 16px;
+padding:10px 14px;
 background:var(--bg-card);
 border:1px solid var(--border);
-border-radius:10px;
 color:#fff;
-cursor:pointer;
+border-radius:10px;
 margin-bottom:20px;
 }
 
 .profile-header{
 text-align:center;
-padding-bottom:18px;
-margin-bottom:20px;
 border-bottom:1px solid var(--border);
+padding-bottom:16px;
+margin-bottom:16px;
 }
 
 .profile-name{
-margin:0;
-font-size:clamp(24px,6vw,34px);
+font-size:28px;
 font-weight:800;
-}
-
-.profile-title{
-color:var(--orange);
+margin:0;
 }
 
 .profile-rating{
-margin-top:10px;
-font-size:20px;
-font-weight:700;
 color:var(--orange);
+margin-top:8px;
+font-size:18px;
+font-weight:700;
 }
 
 .card{
-width:100%;
 background:var(--bg-card);
 border:1px solid var(--border);
-border-radius:16px;
+border-radius:14px;
 padding:14px;
-margin-top:16px;
+margin-top:14px;
 overflow-x:auto;
 }
 
@@ -213,33 +174,18 @@ border-collapse:collapse;
 min-width:280px;
 }
 
-.history-table th{
-font-size:12px;
-padding-bottom:12px;
-text-transform:uppercase;
-color:var(--text-muted);
-}
-
+.history-table th,
 .history-table td{
-padding:14px 6px;
-border-top:1px solid var(--border);
 text-align:center;
+padding:12px;
+border-top:1px solid var(--border);
 font-size:14px;
 }
 
-.change-up{
-color:#4ADE80;
-font-weight:700;
-}
-
-.change-down{
-color:#F87171;
-font-weight:700;
-}
+.change-up{color:#4ADE80;font-weight:700;}
+.change-down{color:#F87171;font-weight:700;}
 
 .chart-container{
-position:relative;
-width:100%;
 height:260px;
 }
 
@@ -250,41 +196,9 @@ height:100%!important;
 
 footer{
 text-align:center;
-padding:30px 16px;
-border-top:1px solid var(--border);
+padding:30px;
 color:var(--text-muted);
 font-size:13px;
-margin-top:30px;
-}
-
-@media(max-width:768px){
-
-.container{
-padding:14px;
-}
-
-.hero-logo{
-max-width:180px;
-}
-
-.hero-subtitle{
-font-size:14px;
-}
-
-.profile-rating{
-font-size:18px;
-}
-
-.chart-container{
-height:220px;
-}
-
-.history-table th,
-.history-table td{
-font-size:13px;
-padding:10px 4px;
-}
-
 }
 </style>
 </head>
@@ -299,74 +213,43 @@ padding:10px 4px;
 
 <div id="mainView">
 
-<img src="https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/chessmates_logo.png" class="hero-logo" alt="Logo">
+<img src="https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/chessmates_logo.png" class="hero-logo">
 
 <h1 class="hero-title">Chessmates Philippine Rating</h1>
-
-<p class="hero-subtitle">
-Track rating movements for CMP Club
-</p>
+<p class="hero-subtitle">Track rating movements for CMP Club</p>
 
 <div class="search-container">
-
 <div class="search-input-wrapper">
-
-<div class="search-icon">
-🔍
-</div>
-
+<div class="search-icon">🔍</div>
 <input type="text" id="searchBox" placeholder="LastName, FirstName or ID..." autocomplete="off">
-
 </div>
-
 <div class="results" id="results"></div>
-
 </div>
 
 </div>
 
 <div class="profile" id="profile">
 
-<button onclick="goBack()" class="back-btn">
-← Back
-</button>
+<button class="back-btn" onclick="goBack()">← Back</button>
 
 <div class="profile-header">
-
 <h2 id="playerName" class="profile-name"></h2>
-
 <div id="playerRating" class="profile-rating"></div>
-
 </div>
 
-<h3 style="margin:0;font-size:18px;text-align:center;">
-Chessmates Philippine Rating History
-</h3>
-
 <div class="card">
-
 <table class="history-table">
-
 <thead>
-<tr>
-<th>Date</th>
-<th>Rating</th>
-<th>+/-</th>
-</tr>
+<tr><th>Date</th><th>Rating</th><th>+/-</th></tr>
 </thead>
-
 <tbody id="ratingHistoryBody"></tbody>
-
 </table>
-
 </div>
 
 <div class="card">
-
 <div class="chart-container">
 <canvas id="ratingChart"></canvas>
 </div>
-
 </div>
 
 </div>
@@ -374,7 +257,7 @@ Chessmates Philippine Rating History
 </div>
 
 <footer>
-© 2026 All rights reserved | Powered by The Lounge & Chess Lounge
+© 2026 Chessmates Rating System
 </footer>
 
 <script>
@@ -386,295 +269,154 @@ let historyFiles=[];
 let playerHistory=[];
 
 async function getLatestFile(){
-
 try{
-
 const res=await fetch(repoAPI);
-
 const data=await res.json();
 
-let monthlyFiles=data.filter(f=>
-f.name.toLowerCase().endsWith(".csv") &&
-!["phrating.csv","phratings.csv","phrapid.csv"]
-.includes(f.name.toLowerCase())
-);
+const files=data.filter(f=>f.name.endsWith(".csv"));
 
-historyFiles=monthlyFiles.sort((a,b)=>{
-return new Date(a.name)-new Date(b.name);
-});
+historyFiles=files.sort((a,b)=>new Date(a.name)-new Date(b.name));
 
-if(historyFiles.length>0){
-
-const latestFile=historyFiles[historyFiles.length-1].download_url;
-
-const csvRes=await fetch(latestFile);
-
-cachedData=parseCSV(await csvRes.text());
+if(historyFiles.length){
+const latest=await fetch(historyFiles[historyFiles.length-1].download_url);
+cachedData=parseCSV(await latest.text());
 }
 
-const rapidFile=data.find(f=>
-f.name.toLowerCase()==="phrapid.csv"
-);
+const rapid=data.find(f=>f.name.toLowerCase()==="phrapid.csv");
 
-if(rapidFile){
-
-const rapidRes=await fetch(rapidFile.download_url);
-
-fallbackData=parseCSV(await rapidRes.text());
+if(rapid){
+const r=await fetch(rapid.download_url);
+fallbackData=parseCSV(await r.text());
 }
 
-}catch(e){
-
-console.log(e);
-}
+}catch(e){console.log(e);}
 }
 
 function parseCSV(text){
-
-const lines=text.split(/\r?\n/).filter(l=>l.trim());
-
-if(lines.length<1)return[];
-
+const lines=text.split(/\r?\n/).filter(l=>l);
 const headers=lines[0].split(",");
-
-return lines.slice(1).map(line=>{
-
-const values=line.split(",");
-
-let obj={};
-
-headers.forEach((h,i)=>{
-obj[h.trim()]=values[i]?values[i].trim():"";
-});
-
-return obj;
+return lines.slice(1).map(l=>{
+const v=l.split(",");
+let o={};
+headers.forEach((h,i)=>o[h.trim()]=v[i]?.trim()||"");
+return o;
 });
 }
 
-document.getElementById("searchBox")
-.addEventListener("input",function(){
-
-performSearch(this.value.toLowerCase().trim());
-
+document.getElementById("searchBox").addEventListener("input",e=>{
+performSearch(e.target.value.toLowerCase().trim());
 });
 
 function performSearch(query){
-
 const container=document.getElementById("results");
 
 if(query.length<2){
-
 container.style.display="none";
-
 return;
 }
 
-const filterFunc=(p)=>{
-
+const match=p=>{
 const ln=(p.LastName||"").toLowerCase();
-
 const fn=(p.FirstName||p.FirstNamme||"").toLowerCase();
-
+const full=(ln+" "+fn).trim();
 const id=(p.ID_No||"").toLowerCase();
 
 if(query.includes(",")){
-
-const parts=query.split(",").map(x=>x.trim());
-
-return ln.startsWith(parts[0]) &&
-fn.startsWith(parts[1]||"");
+const [qLn,qFn]=query.split(",").map(x=>x.trim());
+return ln.startsWith(qLn)&&fn.startsWith(qFn);
 }
 
-return ln.startsWith(query) ||
-id.startsWith(query);
+return ln.startsWith(query)||full.includes(query)||id.startsWith(query);
 };
 
-let results=cachedData.filter(filterFunc);
+let latest=cachedData.filter(match);
+let rapid=fallbackData.filter(match).map(p=>({...p,isNational:true}));
 
-if(results.length===0){
+const ids=new Set(latest.map(p=>p.ID_No));
+rapid=rapid.filter(p=>!ids.has(p.ID_No));
 
-results=fallbackData
-.filter(filterFunc)
-.map(p=>({...p,isNational:true}));
-}
-
-if(results.length>0){
+const results=[...latest,...rapid];
 
 container.innerHTML="";
+if(!results.length){container.style.display="none";return;}
 
 container.style.display="block";
 
 results.forEach(p=>{
-
 const div=document.createElement("div");
-
 div.className="result-item";
-
-div.innerText=
-p.LastName+", "+(p.FirstName||p.FirstNamme||"");
-
+div.innerText=p.LastName+", "+(p.FirstName||p.FirstNamme||"");
 div.onclick=()=>showProfile(p);
-
 container.appendChild(div);
-
 });
-
-}else{
-
-container.style.display="none";
-}
 }
 
 async function showProfile(player){
-
 document.getElementById("mainView").style.display="none";
-
 document.getElementById("profile").style.display="block";
 
-const titleText=
-(player.TITLE &&
-player.TITLE.trim()!=="" &&
-player.TITLE!=="0")
-?player.TITLE.trim()
-:"";
+document.getElementById("playerName").innerText=
+(player.FirstName||player.FirstNamme||"")+" "+player.LastName;
 
-const nameEl=document.getElementById("playerName");
-
-nameEl.innerHTML="";
-
-if(titleText){
-
-const span=document.createElement("span");
-
-span.className="profile-title";
-
-span.innerText=titleText+" ";
-
-nameEl.appendChild(span);
-}
-
-nameEl.appendChild(
-document.createTextNode(
-(player.FirstName||player.FirstNamme||"")+" "+player.LastName
-)
-);
-
-const ratingEl=document.getElementById("playerRating");
-
-if(player.Rtg_Nat && player.Rtg_Nat!=="0"){
-
-ratingEl.innerText=
-(player.isNational?"National Rating: ":"CMP: ")
-+player.Rtg_Nat;
-
-}else{
-
-ratingEl.style.display="none";
-}
+document.getElementById("playerRating").innerText=
+player.Rtg_Nat||"";
 
 playerHistory=[];
 
-for(let file of historyFiles){
-
-const res=await fetch(file.download_url);
-
-const text=await res.text();
-
-const data=parseCSV(text);
-
-const found=data.find(p=>p.ID_No===player.ID_No);
-
+for(let f of historyFiles){
+const r=await fetch(f.download_url);
+const d=parseCSV(await r.text());
+const found=d.find(x=>x.ID_No===player.ID_No);
 if(found){
-
-playerHistory.push({
-date:file.name.replace(".csv",""),
-rating:found.Rtg_Nat
-});
+playerHistory.push({date:f.name.replace(".csv",""),rating:found.Rtg_Nat});
 }
 }
 
 displayHistory();
-
 drawChart();
-
-window.scrollTo(0,0);
 }
 
 function goBack(){
-
 document.getElementById("profile").style.display="none";
-
 document.getElementById("mainView").style.display="block";
-
-document.getElementById("searchBox").value="";
-
-document.getElementById("results").style.display="none";
-
-if(window.ratingChartInstance){
-window.ratingChartInstance.destroy();
-}
 }
 
 function displayHistory(){
-
 const tbody=document.getElementById("ratingHistoryBody");
-
 tbody.innerHTML="";
 
-const sorted=[...playerHistory].reverse();
+const s=[...playerHistory].reverse();
 
-sorted.forEach((h,index)=>{
+s.forEach((h,i)=>{
+const p=s[i+1];
+let diff="-";
 
-const tr=document.createElement("tr");
-
-const prev=sorted[index+1];
-
-let diffText="-";
-let diffClass="";
-
-if(prev){
-
-const diff=parseInt(h.rating)-parseInt(prev.rating);
-
-if(diff>0){
-diffText="+"+diff;
-diffClass="change-up";
-}else if(diff<0){
-diffText=diff;
-diffClass="change-down";
-}else{
-diffText="0";
-}
+if(p){
+const d=parseInt(h.rating)-parseInt(p.rating);
+diff=d>0?`+${d}`:d;
 }
 
-tr.innerHTML=`
-<td>${h.date.replace("_"," ")}</td>
+tbody.innerHTML+=`
+<tr>
+<td>${h.date}</td>
 <td>${h.rating}</td>
-<td class="${diffClass}">${diffText}</td>
-`;
-
-tbody.appendChild(tr);
-
+<td>${diff}</td>
+</tr>`;
 });
 }
 
 function drawChart(){
-
 const ctx=document.getElementById("ratingChart");
 
-if(window.ratingChartInstance){
-window.ratingChartInstance.destroy();
-}
+if(window.chart)window.chart.destroy();
 
-window.ratingChartInstance=new Chart(ctx,{
+window.chart=new Chart(ctx,{
 type:"line",
 data:{
-labels:playerHistory.map(h=>h.date.replace("_"," ")),
+labels:playerHistory.map(h=>h.date),
 datasets:[{
 data:playerHistory.map(h=>h.rating),
 borderColor:"#FFA500",
-backgroundColor:"rgba(255,165,0,.1)",
-borderWidth:2,
 tension:.3,
 fill:true
 }]
@@ -682,29 +424,7 @@ fill:true
 options:{
 responsive:true,
 maintainAspectRatio:false,
-plugins:{
-legend:{
-display:false
-}
-},
-scales:{
-y:{
-ticks:{
-color:"#94A3B8"
-},
-grid:{
-color:"#334155"
-}
-},
-x:{
-ticks:{
-color:"#94A3B8"
-},
-grid:{
-display:false
-}
-}
-}
+plugins:{legend:{display:false}}
 }
 });
 }
