@@ -509,6 +509,7 @@ function performSearch(query) {
 }
 
 async function showProfile(player) {
+    history.pushState({ view: 'profile' }, '');
     document.getElementById("mainView").style.display = "none";
     document.getElementById("profile").style.display = "block";
     const titleText = (player.TITLE && player.TITLE.trim() !== "" && player.TITLE !== "0") ? player.TITLE.trim() : "";
@@ -539,12 +540,18 @@ async function showProfile(player) {
 }
 
 function goBack() {
+    if (document.getElementById("profile").style.display === "block") {
+        history.back();
+    }
+}
+
+window.addEventListener('popstate', function(event) {
     document.getElementById("profile").style.display = "none";
     document.getElementById("mainView").style.display = "block";
     document.getElementById("searchBox").value = "";
     document.getElementById("results").style.display = "none";
     if (window.ratingChartInstance) window.ratingChartInstance.destroy();
-}
+});
 
 function displayHistory() {
     const tbody = document.getElementById("ratingHistoryBody");
