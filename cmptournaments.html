@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>CMP Tournament Rated List</title>
+<style>
+    :root {
+        --bg-deep: #0B1120;
+        --bg-card: #1E293B;
+        --text-main: #FFFFFF;
+        --text-muted: #94A3B8;
+        --orange: #FFA500;
+        --orange-hover: #E69500;
+        --border: #334155;
+    }
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        margin: 0;
+        background-color: var(--bg-deep);
+        background-image: radial-gradient(circle at top right, rgba(255,165,0,0.05), transparent),
+                          linear-gradient(to bottom, rgba(11, 17, 32, 0.8), rgba(11, 17, 32, 1)),
+                          url('https://images.unsplash.com/photo-1529699211952-734e80c4d42b?auto=format&fit=crop&q=80&w=2000');
+        background-attachment: fixed;
+        background-size: cover;
+        color: var(--text-main);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    .container {
+        flex: 1 0 auto;
+        padding: 20px 16px;
+        max-width: 480px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .hero-logo {
+        max-width: 150px;
+        width: 100%;
+        margin: 0 auto 20px auto;
+        display: block;
+        border-radius: 16px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+        cursor: pointer;
+    }
+
+    .hero-title {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--orange);
+        margin: 0 auto 24px auto;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        text-align: center;
+        width: 100%;
+    }
+
+    .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 12px;
+        margin-top: 16px;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .tournament-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 400px;
+    }
+
+    .tournament-table th {
+        text-align: left;
+        color: var(--text-muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        padding: 10px 8px;
+        border-bottom: 2px solid var(--border);
+    }
+
+    .tournament-table td {
+        padding: 12px 8px;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+    }
+
+    .tournament-name {
+        color: var(--orange);
+        font-weight: 700;
+    }
+
+    .tournament-link {
+        color: #60A5FA;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    footer {
+        padding: 40px 20px;
+        text-align: center;
+        border-top: 1px solid var(--border);
+        color: var(--text-muted);
+        font-size: 13px;
+        width: 100%;
+    }
+
+    .loading {
+        color: var(--orange);
+        font-weight: 700;
+        margin-top: 50px;
+    }
+</style>
+</head>
+<body oncontextmenu="return false;">
+
+<div class="container">
+    <img src="https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/chessmates_logo.png"
+         class="hero-logo"
+         onclick="window.location.href='CMP-web.html'"
+         alt="Logo">
+
+    <h1 class="hero-title">List of Rated Tournament</h1>
+
+    <div id="loading" class="loading">Loading Tournaments...</div>
+
+    <div class="card" id="tournamentCard" style="display: none;">
+        <table class="tournament-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Tournament</th>
+                    <th>Type</th>
+                    <th>Rds</th>
+                    <th>URL</th>
+                </tr>
+            </thead>
+            <tbody id="tournamentBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<footer>
+    © 2026 All rights reserved <br> Powered by The Lounge & Chess Lounge
+</footer>
+
+<script>
+// Prevent right-click, source view, and dev tools
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+    if (
+        e.key === 'F12' ||
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C' || e.key === 'J')) ||
+        (e.ctrlKey && e.key === 'U') ||
+        (e.ctrlKey && e.key === 'S')
+    ) {
+        e.preventDefault();
+        return false;
+    }
+});
+
+const csvURL = "https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/CMP/CMTournamentDB.csv";
+
+async function loadTournaments() {
+    try {
+        const res = await fetch(csvURL + "?v=" + Date.now());
+        if (!res.ok) throw new Error("Failed to fetch");
+        const text = await res.text();
+        const data = parseCSV(text);
+        displayTournaments(data);
+    } catch (e) {
+        document.getElementById("loading").innerText = "Failed to load tournament data.";
+        console.error(e);
+    }
+}
+
+function parseCSV(text) {
+    const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+    if (lines.length < 1) return [];
+
+    const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
+
+    return lines.slice(1).map(line => {
+        const values = [];
+        let cur = '';
+        let q = false;
+        for (let i = 0; i < line.length; i++) {
+            if (line[i] === '"') q = !q;
+            else if (line[i] === ',' && !q) {
+                values.push(cur.trim());
+                cur = '';
+            } else cur += line[i];
+        }
+        values.push(cur.trim());
+
+        let obj = {};
+        headers.forEach((h, i) => {
+            if (h) obj[h] = (values[i] || "").replace(/^"|"$/g, '').trim();
+        });
+        return obj;
+    });
+}
+
+function displayTournaments(data) {
+    const tbody = document.getElementById("tournamentBody");
+    tbody.innerHTML = "";
+
+    data.forEach(t => {
+        const tr = document.createElement("tr");
+
+        const dateCell = document.createElement("td");
+        dateCell.innerText = t.date || "";
+
+        const nameCell = document.createElement("td");
+        nameCell.className = "tournament-name";
+        nameCell.innerText = t.tournament || "";
+
+        const typeCell = document.createElement("td");
+        typeCell.innerText = t.type || "";
+
+        const roundCell = document.createElement("td");
+        roundCell.innerText = t.round || "";
+
+        const urlCell = document.createElement("td");
+        if (t.url && t.url !== "0" && t.url !== "") {
+            const a = document.createElement("a");
+            a.href = t.url;
+            a.target = "_blank";
+            a.className = "tournament-link";
+            a.innerText = "Link";
+            urlCell.appendChild(a);
+        } else {
+            urlCell.innerText = "-";
+        }
+
+        tr.appendChild(dateCell);
+        tr.appendChild(nameCell);
+        tr.appendChild(typeCell);
+        tr.appendChild(roundCell);
+        tr.appendChild(urlCell);
+
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("tournamentCard").style.display = "block";
+}
+
+loadTournaments();
+</script>
+</body>
+</html>
