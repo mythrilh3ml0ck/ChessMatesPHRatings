@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Loading Chessmates Ratings</title>
+    <style>
+        body, html {
+            height: 100%; margin: 0; padding: 0;
+            background-color: #000000;
+            background-image:
+                linear-gradient(45deg, #080808 25%, transparent 25%, transparent 75%, #080808 75%, #080808),
+                linear-gradient(45deg, #080808 25%, transparent 25%, transparent 75%, #080808 75%, #080808);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+            font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; overflow: hidden;
+        }
+        .splash-container { text-align: center; animation: fadeIn 1.2s ease-in-out; }
+        .logo { width: 250px; height: auto; margin-bottom: 30px; filter: drop-shadow(0 0 15px rgba(255, 153, 51, 0.3)); }
+        .loader-bar { width: 200px; height: 4px; background: rgba(255, 153, 51, 0.2); border-radius: 10px; margin: 0 auto; position: relative; overflow: hidden; }
+        .loader-progress { width: 0%; height: 100%; background: #ff9933; border-radius: 10px; animation: progress 5s ease-in-out forwards; }
+        .loading-text { color: #ffb366; font-size: 12px; margin-top: 10px; opacity: 0.8; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes progress { 0% { width: 0%; } 100% { width: 100%; } }
+    </style>
+</head>
+<body>
+<div class="splash-container">
+    <img src="images/logo/CMPR_logo.png" alt="Logo" class="logo">
+    <div id="versionText" style="color: #ff9933; font-size: 10px; margin-top: 10px; margin-bottom: 25px; opacity: 0.8;">Version 1.0.0</div>
+    <div class="loader-bar"><div class="loader-progress"></div></div>
+    <div class="loading-text">Loading Database...</div>
+    <div style="margin-top: 50px; color: #ff9933; font-size: 10px; font-weight: bold; opacity: 0.6; letter-spacing: 1px;">POWERED BY<br>THE LOUNGE & CHESS LOUNGE</div>
+</div>
+<script>
+    // Prevent right-click and dev tools
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I','C','J'].includes(e.key)) || (e.ctrlKey && ['U','S'].includes(e.key))) {
+            e.preventDefault(); return false;
+        }
+    });
+
+    // Redirect to index.html after 5 seconds
+    setTimeout(function() {
+        window.location.href = 'index.html';
+    }, 5000);
+</script>
+</body>
+</html>

@@ -6,13 +6,13 @@
 <title>CMP Tournament Rated List</title>
 <style>
     :root {
-        --bg-deep: #0B1120;
-        --bg-card: #1E293B;
+        --bg-deep: #000000;
+        --bg-card: #111111;
         --text-main: #FFFFFF;
         --text-muted: #94A3B8;
         --orange: #FFA500;
         --orange-hover: #E69500;
-        --border: #334155;
+        --border: #222222;
     }
 
     *, *::before, *::after {
@@ -23,12 +23,13 @@
     body {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         margin: 0;
-        background-color: var(--bg-deep);
-        background-image: radial-gradient(circle at top right, rgba(255,165,0,0.05), transparent),
-                          linear-gradient(to bottom, rgba(11, 17, 32, 0.8), rgba(11, 17, 32, 1)),
-                          url('https://images.unsplash.com/photo-1529699211952-734e80c4d42b?auto=format&fit=crop&q=80&w=2000');
+        background-color: #000000;
+        background-image:
+            linear-gradient(45deg, #080808 25%, transparent 25%, transparent 75%, #080808 75%, #080808),
+            linear-gradient(45deg, #080808 25%, transparent 25%, transparent 75%, #080808 75%, #080808);
+        background-size: 60px 60px;
+        background-position: 0 0, 30px 30px;
         background-attachment: fixed;
-        background-size: cover;
         color: var(--text-main);
         min-height: 100vh;
         display: flex;
@@ -131,9 +132,9 @@
 <body oncontextmenu="return false;">
 
 <div class="container">
-    <img src="https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/chessmates_logo.png"
+    <img src="images/logo/CMPR_Logo.png"
          class="hero-logo"
-         onclick="window.location.href='CMP-web.html'"
+         onclick="window.location.href='index.html'"
          alt="Logo">
 
     <h1 class="hero-title">List of Rated Tournament</h1>

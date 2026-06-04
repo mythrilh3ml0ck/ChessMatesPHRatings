@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>About Chess Lounge Lite</title>
+
+    <style>
+
+        :root{
+        --bg-color:#000000;
+        --text-color:white;
+        --card-bg:#111111;
+        --card-border:#222222;
+        --highlight:#FFA500;
+        --footer-bg:#000000;
+        }
+
+        /* GLOBAL */
+
+        html,body{
+        height:100%;
+        width:100%;
+        margin:0;
+        padding:0;
+        overflow-x:hidden;
+        box-sizing:border-box;
+        }
+
+        *,*::before,*::after{
+        box-sizing:border-box;
+        }
+
+        body{
+        font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+        background-color: #000000;
+        background-image:
+            linear-gradient(45deg, #080808 25%, transparent 25%, transparent 75%, #080808 75%, #080808),
+            linear-gradient(45deg, #080808 25%, transparent 25%, transparent 75%, #080808 75%, #080808);
+        background-size: 60px 60px;
+        background-position: 0 0, 30px 30px;
+        background-attachment: fixed;
+        color:var(--text-color);
+        display:flex;
+        flex-direction:column;
+        min-height:100vh;
+        }
+
+        /* APP SHELL */
+
+        .appShell{
+        display:flex;
+        flex-direction:column;
+        height:100%;
+        width:100%;
+        }
+
+        /* MAIN CONTENT */
+
+        .mainContent{
+        flex:1 0 auto;
+        width:100%;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        padding:20px 16px;
+        }
+
+        /* HEADER */
+
+        .hubHeader{
+        width:100%;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+        padding:30px 0;
+        }
+
+        .hubLogo{
+        width:180px;
+        height:auto;
+        max-width:80vw;
+        object-fit:contain;
+        filter: drop-shadow(0 0 15px rgba(255, 165, 0, 0.2));
+        margin-bottom:15px;
+        }
+
+        .logoTitle{
+        font-size:26px;
+        font-weight:800;
+        color:var(--highlight);
+        letter-spacing:1px;
+        margin:0;
+        text-transform:uppercase;
+        }
+
+        /* CONTAINERS */
+
+        .container{
+        display:flex;
+        align-items:center;
+        background:var(--card-bg);
+        padding:14px;
+        margin-bottom:16px;
+        border-radius:18px;
+        border:1px solid var(--card-border);
+        width:100%;
+        max-width:520px;
+        cursor:pointer;
+        transition:.2s;
+        }
+
+        .container:active{
+        transform:scale(.98);
+        }
+
+        .container img{
+        width:60px;
+        height:60px;
+        object-fit:contain;
+        margin-right:14px;
+        border-radius:12px;
+        border:1px solid var(--highlight);
+        background:#000;
+        }
+
+        /* TEXT */
+
+        .details{
+        flex:1;
+        }
+
+        .details h2{
+        margin:0 0 4px 0;
+        font-size:15px;
+        font-weight:700;
+        color:var(--highlight);
+        }
+
+        .details p{
+        margin:0;
+        font-size:12px;
+        line-height:1.3;
+        opacity:.85;
+        }
+
+        /* FOOTER */
+
+        .coolFooter{
+        flex-shrink:0;
+        padding:24px 10px;
+        background:var(--footer-bg);
+        border-top:1px solid var(--card-border);
+        font-size:14px;
+        width:100%;
+        }
+
+        .footerContent{
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        align-items:center;
+        max-width:1100px;
+        margin:auto;
+        gap:8px;
+        text-align:center;
+        }
+
+        .footerBrand{
+        font-weight:bold;
+        color:var(--highlight);
+        }
+
+        .footerInfo{
+        opacity:.8;
+        font-size:13px;
+        }
+
+        .footerInfo a, .details a{
+        color:var(--highlight);
+        text-decoration:none;
+        font-weight:bold;
+        }
+
+        @media (max-width:480px){
+        .container{
+        flex-direction:row; /* Keep row on mobile for about page consistency */
+        }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="appShell">
+
+    <div class="mainContent">
+
+        <!-- HEADER -->
+
+        <div class="hubHeader">
+            <img class="hubLogo"
+                 src="images/logo/CMPR_Logo.png"
+                 alt="Chessmates Logo">
+            <h1 class="logoTitle">About CMP Ratings</h1>
+        </div>
+
+        <!-- FEATURE 0 -->
+
+        <div class="container" onclick="window.location.href='index.html'">
+            <img src="images/logo/CMPR_Logo.png">
+            <div class="details">
+                <h2>Chessmates Ratings</h2>
+                <p>Chessmates Ratings is a lightweight chess companion designed for quick access to current chess ratings for Chessmates Philippines.</p>
+            </div>
+        </div>
+
+        <!-- FEATURE 2 -->
+
+        <div class="container">
+            <img src="images/logo/gmxian.png">
+            <div class="details">
+                <h2>About the Creator</h2>
+                <p>Created by <a href="https://www.chess.com/member/Mythril_H3mL0cK" target="_blank">Mythril_H3mL0cK</a>. A passionate chess enthusiast dedicated to providing high-quality tools for the chess community.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <footer class="coolFooter">
+        <div class="footerContent">
+            <div class="footerBrand">♞ Chessmates Philippine Ratings</div>
+            <div class="footerInfo">
+                © 2026 All Rights Reserved | Powered by The Lounge
+            </div>
+        </div>
+    </footer>
+
+</div>
+
+<script>
+    // Prevent right-click, source view, and dev tools
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+        if (
+            e.key === 'F12' ||
+            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C' || e.key === 'J')) ||
+            (e.ctrlKey && e.key === 'U') ||
+            (e.ctrlKey && e.key === 'S') ||
+            (e.metaKey && e.key === 'u') ||
+            (e.metaKey && e.key === 's')
+        ) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    const containers = document.querySelectorAll('.container');
+
+    containers.forEach(container => {
+        const description = container.querySelector('.details p');
+        if(description &&
+           (description.textContent.includes('(Coming Soon)') ||
+            description.textContent.includes('(For Arbiter)') ||
+            description.textContent.includes('(For Pro)'))) {
+
+            container.classList.add('disabled');
+            container.removeAttribute('onclick');
+        }
+    });
+</script>
+
+</body>
+</html>

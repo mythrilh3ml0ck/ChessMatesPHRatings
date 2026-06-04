@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Chessmates Philippines Ratings</title>
+<title>Chessmate Philippines Ratings</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
     :root {
@@ -41,81 +41,34 @@
     }
 
     header {
-        background: rgba(30, 41, 59, 0.8);
-        backdrop-filter: blur(8px);
-        border-bottom: 1px solid var(--border);
-        padding: 12px 16px;
-        padding-top: calc(12px + env(safe-area-inset-top));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        width: 100%;
-    }
-
-    .header-content {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 16px;
-        width: 100%;
-        max-width: 800px;
-        transition: max-width 0.3s ease;
-    }
-
-    .header-logo {
-        height: 28px;
-    }
-
-    nav {
-        display: flex;
-        gap: 12px;
-    }
-
-    .nav-item {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        color: var(--text-muted);
-        text-decoration: none;
-        font-size: 14px;
-        font-weight: 600;
-        padding: 8px 12px;
-        border-radius: 8px;
-        transition: 0.2s;
-    }
-
-    .nav-item.active {
-        color: #60A5FA;
-        background: rgba(96, 165, 250, 0.1);
+        display: none;
     }
 
     .container {
         flex: 1 0 auto;
-        padding: 20px 16px;
+        padding: 40px 16px;
         max-width: 480px;
         width: 100%;
         display: flex;
         flex-direction: column;
         align-items: center;
-        transition: max-width 0.3s ease;
+        justify-content: flex-start;
     }
 
     .hero-logo {
-        max-width: 250px;
+        max-width: 180px;
         width: 100%;
-        margin: 0 auto 24px auto;
+        margin: 0 auto 32px auto;
         display: block;
-        filter: drop-shadow(0 0 10px rgba(255, 165, 0, 0.2));
+        border-radius: 20px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.6);
     }
 
     .hero-title {
         font-size: 32px;
         font-weight: 800;
         color: var(--orange);
-        margin: 0 auto 8px auto;
+        margin: 0 auto 12px auto;
         letter-spacing: -0.02em;
         line-height: 1.2;
         text-align: center;
@@ -125,7 +78,7 @@
     .hero-subtitle {
         color: var(--text-muted);
         font-size: 16px;
-        margin: 0 auto 32px auto;
+        margin: 0 auto 40px auto;
         line-height: 1.5;
         text-align: center;
         width: 100%;
@@ -138,6 +91,7 @@
         max-width: 600px;
         margin: 0 auto;
         position: relative;
+        width: 100%;
     }
 
     .search-input-wrapper {
@@ -186,7 +140,7 @@
 
     .results {
         margin-top: 12px;
-        text-align: left; /* CHANGED */
+        text-align: left;
         max-width: 600px;
         margin-left: auto;
         margin-right: auto;
@@ -204,7 +158,7 @@
         border-bottom: 1px solid var(--border);
         cursor: pointer;
         font-size: 16px;
-        text-align: left; /* CHANGED */
+        text-align: left;
     }
 
     #mainView, #profile {
@@ -298,31 +252,13 @@
 
     .hide-change .change-col { display: none; }
 
-    .tournament-btn {
-        display: inline-block;
-        margin: 0 auto 20px auto;
-        padding: 12px 24px;
-        background: rgba(255, 165, 0, 0.1);
-        border: 1px solid var(--orange);
-        color: var(--orange);
-        text-decoration: none;
-        border-radius: 999px;
-        font-weight: 700;
-        font-size: 14px;
-        transition: 0.3s;
-        cursor: pointer;
-    }
-    .tournament-btn:active {
-        background: var(--orange);
-        color: #000;
-    }
-
     footer {
-        padding: 20px 20px 40px 20px;
+        padding: 40px 20px;
         text-align: center;
         border-top: 1px solid var(--border);
         color: var(--text-muted);
         font-size: 13px;
+        width: 100%;
     }
 
     @media (min-width: 768px) {
@@ -356,7 +292,7 @@
 <div class="container">
     <div id="mainView">
         <img src="images/logo/CMPR_Logo.png" class="hero-logo" alt="Main Logo">
-        <h1 class="hero-title">Chessmates <br> Philippine Rating</h1>
+        <h1 class="hero-title">Chessmates Philippine Rating</h1>
         <p class="hero-subtitle">Track rating movements for CMP Club</p>
 
         <div class="search-container">
@@ -375,7 +311,7 @@
         <img src="images/logo/CMPR_Logo.png"
              class="hero-logo"
              onclick="goBack()"
-             style="cursor: pointer; max-width: 120px; margin-bottom: 20px;"
+             style="cursor: pointer; max-width: 150px; margin-bottom: 20px;"
              alt="Logo">
 
         <div class="profile-header">
@@ -407,14 +343,26 @@
 </div>
 
 <footer>
-    <div style="margin-bottom: 20px;">
-        <a href="cmptournaments.html" class="tournament-btn" style="margin-bottom: 10px;">Tournament Rated</a>
-        <a href="about.html" class="tournament-btn" style="background: rgba(255,255,255,0.05); border-color: #444; color: #eee;">About App</a>
-    </div>
-    © 2026 All rights reserved <br> Powered by The Lounge & Chess Lounge
+    © 2026 All rights reserved <br> Powered by The Lounge
 </footer>
 
 <script>
+// Prevent right-click, source view, and dev tools
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+    if (
+        e.key === 'F12' ||
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C' || e.key === 'J')) ||
+        (e.ctrlKey && e.key === 'U') ||
+        (e.ctrlKey && e.key === 'S') ||
+        (e.metaKey && e.key === 'u') ||
+        (e.metaKey && e.key === 's')
+    ) {
+        e.preventDefault();
+        return false;
+    }
+});
+
 const GITHUB_TOKEN = "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";
 const AUTH_HEADER = { "Authorization": `token ${GITHUB_TOKEN}` };
 const RAW_HEADER = { ...AUTH_HEADER, "Accept": "application/vnd.github.v3.raw" };
@@ -425,7 +373,6 @@ let fallbackData = [];
 let historyFiles = [];
 let playerHistory = [];
 let csvCache = new Map();
-let allCmpData = [];
 
 async function init() {
     try {
@@ -454,8 +401,8 @@ async function init() {
         });
 
         const allMonthsResults = await Promise.all(loadPromises);
-        // Combine all unique players from all months for the search index
-        // We iterate newest to oldest so cachedData has the most recent record for each player
+
+        // Build combined index for search (most recent record per player)
         let playerMap = new Map();
         allMonthsResults.forEach(monthData => {
             monthData.forEach(p => {
@@ -597,7 +544,6 @@ async function showProfile(player) {
 
     const ratingEl = document.getElementById("playerRating");
 
-    // Determine history first to get correct label
     playerHistory = [];
     historyFiles.forEach(file => {
         const data = csvCache.get(file.name);
@@ -626,11 +572,8 @@ async function showProfile(player) {
             return new Date(b.date.replace("_", " ")) - new Date(a.date.replace("_", " "));
         });
 
-        // Show CMP label if any CMP record exists
         const hasCmp = playerHistory.some(h => h.date !== "National/Initial");
-        const displayRating = playerHistory[0].rating;
-
-        ratingEl.innerText = (hasCmp ? "CMP Rating: " : "National Rating: ") + displayRating;
+        ratingEl.innerText = (hasCmp ? "CMP Rating: " : "National Rating: ") + playerHistory[0].rating;
         ratingEl.style.display = "block";
 
         if (hasCmp) {
@@ -689,6 +632,8 @@ function drawChart(history) {
 
     // Explicitly sort from oldest to newest for the graph
     const chronologicalHistory = [...history].sort((a, b) => {
+        if (a.date === "National/Initial") return -1;
+        if (b.date === "National/Initial") return 1;
         return new Date(a.date.replace("_", " ")) - new Date(b.date.replace("_", " "));
     });
 
