@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Thailand Chess Rankings</title>
+<style>
+    :root {
+        --bg-deep: #000000;
+        --bg-card: #111111;
+        --text-main: #FFFFFF;
+        --text-muted: #94A3B8;
+        --orange: #FFA500;
+        --orange-hover: #E69500;
+        --border: #222222;
+    }
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        margin: 0;
+        background-color: #000000;
+        background-image:
+            linear-gradient(45deg, #080808 25%, transparent 25%, transparent 75%, #080808 75%, #080808),
+            linear-gradient(45deg, #080808 25%, transparent 25%, transparent 75%, #080808 75%, #080808);
+        background-size: 60px 60px;
+        background-position: 0 0, 30px 30px;
+        background-attachment: fixed;
+        color: var(--text-main);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    .container {
+        flex: 1 0 auto;
+        padding: 20px 16px;
+        padding-top: calc(20px + env(safe-area-inset-top));
+        max-width: 600px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .hero-logo {
+        max-width: 150px;
+        width: 100%;
+        margin: 0 auto 20px auto;
+        display: block;
+        border-radius: 16px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+        cursor: pointer;
+    }
+
+    .hero-title {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--orange);
+        margin: 0 auto 12px auto;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        text-align: center;
+        width: 100%;
+    }
+
+    .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 12px;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .rank-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 450px;
+    }
+
+    .rank-table th {
+        text-align: left;
+        color: var(--text-muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        padding: 10px 8px;
+        border-bottom: 2px solid var(--border);
+    }
+
+    .rank-table td {
+        padding: 12px 8px;
+        border-bottom: 1px solid var(--border);
+        font-size: 14px;
+    }
+
+    .player-name {
+        color: var(--orange);
+        font-weight: 700;
+    }
+
+    .rank-cell { font-weight: 800; color: var(--text-muted); width: 40px; }
+    .rating-cell { font-weight: 700; text-align: right; width: 80px; }
+
+    footer {
+        padding: 40px 20px;
+        text-align: center;
+        border-top: 1px solid var(--border);
+        color: var(--text-muted);
+        font-size: 13px;
+        width: 100%;
+    }
+
+    .loading {
+        color: var(--orange);
+        font-weight: 700;
+        margin-top: 50px;
+    }
+</style>
+</head>
+<body oncontextmenu="return false;">
+
+<div class="container">
+    <img src="images/logo/CMPR_Logo.png"
+         class="hero-logo"
+         onclick="window.location.href='index.html'"
+         alt="Logo">
+
+    <h1 class="hero-title">Thailand Chess Rankings</h1>
+
+    <div id="loading" class="loading">Loading Rankings...</div>
+
+    <div class="card" id="rankCard" style="display: none;">
+        <table class="rank-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Name</th>
+                    <th>Title</th>
+                    <th style="text-align: right;">Rating</th>
+                </tr>
+            </thead>
+            <tbody id="rankBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<footer>
+    © 2026 All rights reserved <br> Powered by The Lounge & Chess Lounge
+</footer>
+
+<script>
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+const csvURL = "https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/CMP/otherDB/ThailandRanking.csv";
+let allData = [];
+
+async function loadRankings() {
+    try {
+        const res = await fetch(csvURL + "?v=" + Date.now());
+        if (!res.ok) throw new Error("Failed to fetch");
+        const text = await res.text();
+        allData = parseCSV(text);
+        displayRankings(allData);
+    } catch (e) {
+        document.getElementById("loading").innerText = "Failed to load ranking data.";
+        console.error(e);
+    }
+}
+
+function parseCSV(text) {
+    const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+    if (lines.length < 1) return [];
+
+    const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
+
+    return lines.slice(1).map(line => {
+        const values = [];
+        let cur = '';
+        let q = false;
+        for (let i = 0; i < line.length; i++) {
+            if (line[i] === '"') q = !q;
+            else if (line[i] === ',' && !q) { values.push(cur.trim()); cur = ''; }
+            else cur += line[i];
+        }
+        values.push(cur.trim());
+
+        let obj = {};
+        headers.forEach((h, i) => {
+            if (h) obj[h] = (values[i] || "").replace(/^"|"$/g, '').trim();
+        });
+        return obj;
+    });
+}
+
+function displayRankings(data) {
+    const tbody = document.getElementById("rankBody");
+    tbody.innerHTML = "";
+
+    data.forEach((p, index) => {
+        const tr = document.createElement("tr");
+
+        const rankCell = document.createElement("td");
+        rankCell.className = "rank-cell";
+        rankCell.innerText = p.rank || (index + 1);
+
+        const nameCell = document.createElement("td");
+        nameCell.className = "player-name";
+        nameCell.innerText = p.name || "";
+
+        const titleCell = document.createElement("td");
+        titleCell.innerText = p.title || "-";
+
+        const ratingCell = document.createElement("td");
+        ratingCell.className = "rating-cell";
+        ratingCell.innerText = p.rating || "0";
+
+        tr.appendChild(rankCell);
+        tr.appendChild(nameCell);
+        tr.appendChild(titleCell);
+        tr.appendChild(ratingCell);
+
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("rankCard").style.display = "block";
+}
+
+loadRankings();
+</script>
+</body>
+</html>
