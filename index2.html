@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Chessmates Philippines Ratings (Standalone)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    :root {
+        --bg-deep: #000000;
+        --bg-card: #111111;
+        --text-main: #FFFFFF;
+        --text-muted: #94A3B8;
+        --orange: #FFA500;
+        --orange-hover: #E69500;
+        --border: #222222;
+    }
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        margin: 0;
+        background-color: #000000;
+        background-image:
+            linear-gradient(45deg, #080808 25%, transparent 25%, transparent 75%, #080808 75%, #080808),
+            linear-gradient(45deg, #080808 25%, transparent 25%, transparent 75%, #080808 75%, #080808);
+        background-size: 60px 60px;
+        background-position: 0 0, 30px 30px;
+        background-attachment: fixed;
+        color: var(--text-main);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    header {
+        background: rgba(30, 41, 59, 0.8);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid var(--border);
+        padding: 12px 16px;
+        padding-top: calc(12px + env(safe-area-inset-top));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        width: 100%;
+    }
+
+    .container {
+        flex: 1 0 auto;
+        padding: 20px 16px;
+        padding-top: calc(20px + env(safe-area-inset-top));
+        max-width: 480px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: max-width 0.3s ease;
+    }
+
+    .hero-logo {
+        max-width: 250px;
+        width: 100%;
+        margin: 0 auto 24px auto;
+        display: block;
+        filter: drop-shadow(0 0 10px rgba(255, 165, 0, 0.2));
+    }
+
+    .hero-title {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--orange);
+        margin: 0 auto 8px auto;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        text-align: center;
+        width: 100%;
+    }
+
+    .hero-subtitle {
+        color: var(--text-muted);
+        font-size: 16px;
+        margin: 0 auto 32px auto;
+        line-height: 1.5;
+        text-align: center;
+        width: 100%;
+    }
+
+    .search-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        max-width: 600px;
+        margin: 0 auto;
+        position: relative;
+        width: 100%;
+    }
+
+    .search-input-wrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+    }
+
+    input {
+        width: 100%;
+        padding: 16px 16px 16px 44px;
+        font-size: 16px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        color: white;
+        outline: none;
+        transition: 0.2s;
+        -webkit-appearance: none;
+    }
+
+    input:focus {
+        border-color: var(--orange);
+        box-shadow: 0 0 0 3px rgba(255, 165, 0, 0.1);
+    }
+
+    .results {
+        margin-top: 12px;
+        text-align: left;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        background: var(--bg-card);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        max-height: 300px;
+        overflow-y: auto;
+        display: none;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    .result-item {
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+        font-size: 16px;
+        text-align: left;
+    }
+
+    #mainView, #profile { width: 100%; }
+    .profile { display: none; text-align: center; }
+
+    .profile-header {
+        margin-bottom: 24px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 16px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .profile-name { font-size: 28px; font-weight: 800; margin: 0; line-height: 1.2; text-align: center; }
+    .profile-title { color: var(--orange); }
+    .profile-rating { color: var(--orange); font-size: 20px; font-weight: 700; margin-top: 8px; text-align: center; }
+
+    .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        margin-top: 16px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        display: flex;
+        justify-content: center;
+    }
+
+    .history-table { width: 100%; border-collapse: collapse; min-width: 280px; }
+    .history-table th { text-align: center; color: var(--text-muted); font-size: 12px; text-transform: uppercase; padding-bottom: 12px; letter-spacing: 0.05em; }
+    .history-table td { padding: 14px 0; border-top: 1px solid var(--border); font-size: 15px; text-align: center; }
+
+    .change-up { color: #4ADE80; font-weight: 700; }
+    .change-down { color: #F87171; font-weight: 700; }
+
+    .tournament-btn {
+        display: inline-block;
+        margin: 0 auto 20px auto;
+        padding: 6px 12px;
+        background: rgba(255, 165, 0, 0.1);
+        border: 1px solid var(--orange);
+        color: var(--orange);
+        text-decoration: none;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 12px;
+        transition: 0.3s;
+        cursor: pointer;
+    }
+
+    footer { padding: 20px 20px 40px 20px; text-align: center; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 13px; }
+
+    @media (min-width: 768px) {
+        .container { max-width: 800px; }
+        .hero-title { font-size: 48px; }
+        .hero-subtitle { font-size: 18px; }
+    }
+</style>
+</head>
+<body oncontextmenu="return false;">
+
+<div class="container">
+    <div id="mainView">
+        <img src="https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/images/logo/CMPR_Logo.png" class="hero-logo" alt="Main Logo">
+        <h1 class="hero-title">Chessmates <br> Philippine Rating</h1>
+        <p class="hero-subtitle">Track rating movements for CMP Club</p>
+
+        <div class="search-container">
+            <div class="search-input-wrapper">
+                <div class="search-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="16.65" y1="16.65" x2="21" y2="21"/></svg>
+                </div>
+                <input type="text" id="searchBox" placeholder="LastName, FirstName..." autocomplete="off">
+            </div>
+            <div id="syncStatus" style="font-size: 11px; color: var(--orange); margin-top: 4px; text-align: center; display: none;">Initializing database...</div>
+        </div>
+        <div class="results" id="results"></div>
+    </div>
+
+    <div class="profile" id="profile">
+        <img src="https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/images/logo/CMPR_Logo.png" class="hero-logo" onclick="goBack()" style="cursor: pointer; max-width: 120px; margin-bottom: 20px;" alt="Logo">
+        <div class="profile-header">
+            <div>
+                <h2 id="playerName" class="profile-name"></h2>
+                <div id="playerRating" class="profile-rating"></div>
+            </div>
+        </div>
+        <h3 id="historyTitle" style="margin: 0; font-size: 18px;">Chessmates Philippine Rating History</h3>
+        <div class="card" id="historyCard">
+            <table class="history-table">
+                <thead><tr><th>Date</th><th>Rating</th><th class="change-col">+/-</th></tr></thead>
+                <tbody id="ratingHistoryBody"></tbody>
+            </table>
+        </div>
+        <div class="card" id="chartCard">
+            <canvas id="ratingChart" style="max-height: 200px;"></canvas>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div style="margin-bottom: 20px;">
+        <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 10px; flex-wrap: wrap;">
+            <a href="cmptournaments.html" class="tournament-btn" style="margin: 0;">Tournament Rated</a>
+            <a href="ThaiRank.html" class="tournament-btn" style="margin: 0;">Thailand Ranking</a>
+        </div>
+        <a href="about.html" class="tournament-btn" style="background: rgba(255,255,255,0.05); border-color: #444; color: #eee;">About App</a>
+    </div>
+    © 2026 All rights reserved <br> Powered by The Lounge & Chess Lounge
+</footer>
+
+<script>
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+let masterIndex = [];
+let fullCache = {};
+let historyFiles = [];
+let playerRegistry = new Map();
+
+const DB_NAME = "RatingDB";
+const STORE_NAME = "cache";
+let memoryCache = null;
+
+async function openDB() {
+    return new Promise((resolve) => {
+        try {
+            const request = indexedDB.open(DB_NAME, 1);
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
+            };
+            request.onsuccess = (e) => resolve(e.target.result);
+            request.onerror = () => resolve(null);
+        } catch (e) { resolve(null); }
+    });
+}
+
+async function saveToDB(key, data) {
+    const db = await openDB();
+    if (!db) { memoryCache = data; return; }
+    return new Promise((resolve) => {
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        tx.objectStore(STORE_NAME).put(data, key);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => resolve();
+    });
+}
+
+async function getFromDB(key) {
+    if (memoryCache) return memoryCache;
+    return new Promise(async (resolve) => {
+        const db = await openDB();
+        if (!db) { resolve(null); return; }
+        const tx = db.transaction(STORE_NAME, "readonly");
+        const req = tx.objectStore(STORE_NAME).get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(null);
+    });
+}
+
+const historyAPI = "https://api.github.com/repos/mythrilh3ml0ck/ChessMatesPHRatings/contents/CMP/ratinghistory";
+const RAW_BASE = "https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/CMP";
+
+async function fetchWithTimeout(url, timeout = 10000) {
+    return Promise.race([
+        fetch(url),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeout))
+    ]);
+}
+
+function parseCSV(text) {
+    if (!text || !text.trim()) return { h: [], r: [] };
+    const cleanText = text.replace(/^\uFEFF/, '').trim();
+    const lines = cleanText.split(/\r?\n/).filter(l => l.trim().length > 0);
+    if (lines.length === 0) return { h: [], r: [] };
+
+    const splitLine = (line) => {
+        const values = []; let cur = ''; let inside = false;
+        for (let i = 0; i < line.length; i++) {
+            if (line[i] === '"') inside = !inside;
+            else if (line[i] === ',' && !inside) { values.push(cur.trim()); cur = ''; }
+            else cur += line[i];
+        }
+        values.push(cur.trim());
+        return values.map(v => v.replace(/^"|"$/g, '').trim());
+    };
+
+    const firstLineValues = splitLine(lines[0]);
+    const headerKeywords = ["lastname", "firstname", "rtgnat", "rtg_nat", "title", "sex", "idno", "name"];
+    const isHeader = firstLineValues.some(v => headerKeywords.includes(v.toLowerCase().replace(/[^a-z]/g, '')));
+
+    let headers = isHeader ? firstLineValues : ["TITLE", "LastName", "FirstName", "SEX", "Rtg_Nat"];
+    let rows = lines.slice(isHeader ? 1 : 0).map(splitLine);
+
+    return { h: headers, r: rows };
+}
+
+function processFile(fileData) {
+    if (!fileData || !fileData.h || !fileData.r) return [];
+    return fileData.r.map(row => {
+        const obj = {};
+        fileData.h.forEach((h, i) => { obj[h] = row[i] || ""; });
+        return obj;
+    });
+}
+
+function rebuildSearchIndex(cache) {
+    if (!cache || Object.keys(cache).length === 0) return;
+    fullCache = cache;
+
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    historyFiles = Object.keys(fullCache)
+        .filter(name => name !== "PHRapid.csv")
+        .sort((a, b) => {
+            try {
+                const dA = new Date(a.replace(".csv", "").replace(/[_-]/g, " "));
+                const dB = new Date(b.replace(".csv", "").replace(/[_-]/g, " "));
+                if (isNaN(dA.getTime()) || isNaN(dB.getTime())) return b.localeCompare(a);
+                return dB - dA;
+            } catch(e) { return 0; }
+        });
+
+    playerRegistry.clear();
+    const allFiles = [...historyFiles].reverse(); // Oldest to Newest
+    if (fullCache["PHRapid.csv"]) allFiles.unshift("PHRapid.csv");
+
+    allFiles.forEach(fn => {
+        processFile(fullCache[fn]).forEach(p => {
+            const ln = getLN(p).toLowerCase();
+            const fnP = getFN(p).toLowerCase();
+            if (ln) {
+                const id = getID(p) || (ln + "|" + fnP);
+                playerRegistry.set(id, p);
+            }
+        });
+    });
+
+    masterIndex = Array.from(playerRegistry.values());
+    console.log("Index rebuilt, player count:", masterIndex.length);
+}
+
+async function sync2(csvCache) {
+    const statusEl = document.getElementById("syncStatus");
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    statusEl.style.display = "block";
+    statusEl.innerText = "Syncing ratings...";
+
+    // 1. Direct RAW Sync for National Ratings
+    try {
+        const res = await fetchWithTimeout(`${RAW_BASE}/nationalrating/PHRapid.csv?v=${Date.now()}`);
+        if (res.ok) {
+            csvCache["PHRapid.csv"] = parseCSV(await res.text());
+            await saveToDB("rating_cache", csvCache);
+            rebuildSearchIndex(csvCache);
+            statusEl.innerText = "National ratings loaded.";
+        }
+    } catch (e) { console.error("National fetch failed", e); }
+
+    // 2. Direct RAW Sync for Recent Months
+    const now = new Date();
+    const guesses = [];
+    for (let i = 0; i < 4; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        guesses.push(months[d.getMonth()] + "_" + d.getFullYear() + ".csv");
+    }
+
+    for (const fileName of guesses) {
+        if (csvCache[fileName]) continue;
+        try {
+            const res = await fetchWithTimeout(`${RAW_BASE}/ratinghistory/${fileName}?v=${Date.now()}`);
+            if (res.ok) {
+                csvCache[fileName] = parseCSV(await res.text());
+                await saveToDB("rating_cache", csvCache);
+                rebuildSearchIndex(csvCache);
+                statusEl.innerText = `Loaded ${fileName.split('_')[0]} ratings.`;
+            }
+        } catch (e) {}
+    }
+
+    // 3. Full Discovery via API
+    try {
+        const response = await fetchWithTimeout(historyAPI);
+        if (response.ok) {
+            const data = await response.json();
+            const monthlyFiles = data.filter(f => f.name.toLowerCase().endsWith(".csv"));
+            const newFiles = monthlyFiles.filter(f => !csvCache[f.name]);
+
+            for (let i = 0; i < newFiles.length; i += 3) {
+                const chunk = newFiles.slice(i, i + 3);
+                await Promise.all(chunk.map(async (file) => {
+                    try {
+                        const res = await fetchWithTimeout(file.download_url || file.url);
+                        if (res.ok) csvCache[file.name] = parseCSV(await res.text());
+                    } catch (e) {}
+                }));
+                rebuildSearchIndex(csvCache);
+                statusEl.innerText = `Syncing history... (${Math.min(i+3, newFiles.length)}/${newFiles.length})`;
+            }
+            await saveToDB("rating_cache", csvCache);
+        }
+    } catch (e) { console.warn("API sync limited."); }
+
+    statusEl.innerText = masterIndex.length > 0 ? "Ratings up to date." : "Sync failed. Offline mode.";
+    setTimeout(() => { statusEl.style.display = "none"; }, 3000);
+}
+
+async function init() {
+    try {
+        const cache = await getFromDB("rating_cache") || {};
+        rebuildSearchIndex(cache);
+
+        if (!window.isSyncing) {
+            window.isSyncing = true;
+            sync2(cache).finally(() => { window.isSyncing = false; });
+        }
+    } catch (e) { console.error("Init Error:", e); }
+}
+
+function getVal(p, key) {
+    if (!p) return "";
+    const ck = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const ak = Object.keys(p).find(o => o.toLowerCase().replace(/[^a-z0-9]/g, '') === ck);
+    return ak ? (p[ak] || "").toString().trim() : "";
+}
+
+function getLN(p) {
+    let ln = getVal(p, "LastName");
+    if (!ln) {
+        const full = getVal(p, "Name");
+        if (full.includes(",")) ln = full.split(",")[0].trim();
+        else ln = full;
+    }
+    return ln;
+}
+function getFN(p) {
+    let fn = getVal(p, "FirstName");
+    if (!fn) {
+        const full = getVal(p, "Name");
+        if (full.includes(",")) fn = full.split(",")[1].trim();
+    }
+    return fn;
+}
+function getID(p) { return getVal(p, "IDNo") || getVal(p, "ID") || getVal(p, "No"); }
+function getRTG(p) { return getVal(p, "RtgNat") || "0"; }
+function getTitle(p) { return getVal(p, "TITLE"); }
+
+function normalize(s) { return (s || "").toLowerCase().replace(/jr\.?$/, "jr").replace(/[^a-z0-9]/g, ""); }
+
+function isSamePlayer(p1, p2) {
+    const id1 = getID(p1); const id2 = getID(p2);
+    if (id1 && id2 && id1 === id2) return true;
+    const ln1 = normalize(getLN(p1)); const ln2 = normalize(getLN(p2));
+    const fn1 = normalize(getFN(p1)); const fn2 = normalize(getFN(p2));
+    return ln1 && ln1 === ln2 && fn1 && fn1 === fn2;
+}
+
+document.getElementById("searchBox").addEventListener("input", function() {
+    performSearch(this.value.toLowerCase().trim());
+});
+
+function performSearch(query) {
+    const container = document.getElementById("results");
+    if (query.length < 2) { container.style.display = "none"; return; }
+
+    if (masterIndex.length === 0) {
+        container.innerHTML = "<div class='result-item'>Connecting to database...</div>";
+        container.style.display = "block";
+        return;
+    }
+
+    // Flexible multi-word search (handles "John Doe", "Doe John", or "Doe, John")
+    const tokens = query.toLowerCase().split(/[\s,]+/).filter(t => t.length > 0);
+
+    const results = masterIndex.filter(p => {
+        const ln = (getLN(p) || "").toLowerCase();
+        const fn = (getFN(p) || "").toLowerCase();
+        const fullName = `${ln} ${fn}`;
+
+        // Match if ALL typed words are found somewhere in the player's name
+        return tokens.every(token => fullName.includes(token));
+    });
+
+    if (results.length > 0) {
+        container.innerHTML = "";
+        container.style.display = "block";
+        results.slice(0, 30).forEach(p => {
+            const div = document.createElement("div");
+            div.className = "result-item";
+            div.innerText = `${getLN(p)}, ${getFN(p)}`;
+            div.onclick = () => showProfile(p);
+            container.appendChild(div);
+        });
+    } else {
+        container.innerHTML = "<div class='result-item'>No players found.</div>";
+        container.style.display = "block";
+    }
+}
+
+async function showProfile(p) {
+    history.pushState({ view: 'profile' }, '');
+    document.getElementById("mainView").style.display = "none";
+    document.getElementById("profile").style.display = "block";
+    document.getElementById("historyTitle").style.display = "none";
+    document.getElementById("historyCard").style.display = "none";
+    document.getElementById("chartCard").style.display = "none";
+
+    const title = getTitle(p);
+    const nameEl = document.getElementById("playerName");
+    nameEl.innerHTML = "";
+    if (title && title !== "0") {
+        const span = document.createElement("span"); span.className = "profile-title";
+        span.innerText = title + " "; nameEl.appendChild(span);
+    }
+    nameEl.appendChild(document.createTextNode(getFN(p) + " " + getLN(p)));
+
+    const playerHistory = [];
+    historyFiles.forEach(fn => {
+        const match = processFile(fullCache[fn]).find(x => isSamePlayer(x, p));
+        if (match) playerHistory.push({ date: fn.replace(".csv",""), rating: getRTG(match) });
+    });
+
+    const nat = processFile(fullCache["PHRapid.csv"]).find(x => isSamePlayer(x, p));
+    if (nat) {
+        const r = getRTG(nat);
+        if (r && r !== "0") playerHistory.push({ date: "National/Initial", rating: r });
+    }
+
+    if (playerHistory.length > 0) {
+        playerHistory.sort((a, b) => {
+            if (a.date === "National/Initial") return 1;
+            if (b.date === "National/Initial") return -1;
+            const dA = new Date(a.date.replace(/[_-]/g, " "));
+            const dB = new Date(b.date.replace(/[_-]/g, " "));
+            if (isNaN(dA.getTime()) || isNaN(dB.getTime())) return b.date.localeCompare(a.date);
+            return dB - dA;
+        });
+
+        const hasCmp = playerHistory.some(h => h.date !== "National/Initial");
+        document.getElementById("playerRating").innerText = (hasCmp ? "CMP Rating: " : "National Rating: ") + playerHistory[0].rating;
+
+        if (hasCmp) {
+            document.getElementById("historyTitle").style.display = "block";
+            document.getElementById("historyCard").style.display = "flex";
+            document.getElementById("chartCard").style.display = "flex";
+            displayHistory(playerHistory);
+            drawChart(playerHistory);
+        }
+    }
+}
+
+function goBack() { history.back(); }
+window.onpopstate = () => {
+    document.getElementById("profile").style.display = "none";
+    document.getElementById("mainView").style.display = "block";
+    document.getElementById("searchBox").value = "";
+    document.getElementById("results").style.display = "none";
+    if (window.ratingChartInstance) window.ratingChartInstance.destroy();
+};
+
+function displayHistory(h) {
+    const b = document.getElementById("ratingHistoryBody"); b.innerHTML = "";
+    h.forEach((x, i) => {
+        const tr = document.createElement("tr");
+        const d = document.createElement("td"); d.innerText = x.date.replace("_", " ");
+        const r = document.createElement("td"); r.innerText = x.rating;
+        const c = document.createElement("td"); c.className = "change-col";
+        const n = h[i+1];
+        if (n) {
+            const diff = parseInt(x.rating) - parseInt(n.rating);
+            if (diff > 0) { c.innerText = "+" + diff; c.className += " change-up"; }
+            else if (diff < 0) { c.innerText = diff; c.className += " change-down"; }
+            else c.innerText = "0";
+        } else c.innerText = "-";
+        tr.append(d, r, c); b.append(tr);
+    });
+}
+
+function drawChart(h) {
+    const ctx = document.getElementById("ratingChart");
+    if (window.ratingChartInstance) window.ratingChartInstance.destroy();
+    const sorted = [...h].sort((a, b) => {
+        if (a.date === "National/Initial") return -1;
+        if (b.date === "National/Initial") return 1;
+        const dA = new Date(a.date.replace(/[_-]/g, " "));
+        const dB = new Date(b.date.replace(/[_-]/g, " "));
+        if (isNaN(dA.getTime()) || isNaN(dB.getTime())) return a.date.localeCompare(b.date);
+        return dA - dB;
+    });
+    window.ratingChartInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: sorted.map(x => x.date.replace("_"," ")),
+            datasets: [{
+                label: "Rating", data: sorted.map(x => x.rating),
+                borderColor: "#FFA500", backgroundColor: "rgba(255, 165, 0, 0.1)",
+                borderWidth: 2, pointRadius: 4, tension: 0.3, fill: true
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { grid: { color: "#222" }, ticks: { color: "#94A3B8" } },
+                x: { grid: { display: false }, ticks: { color: "#94A3B8" } }
+            }
+        }
+    });
+}
+
+init();
+</script>
+</body>
+</html>
