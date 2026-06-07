@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Loading Chessmates Ratings</title>
+    <title>Syncing Chessmates Ratings</title>
     <style>
         body, html {
             height: 100%; margin: 0; padding: 0;
@@ -15,36 +15,154 @@
             background-position: 0 0, 30px 30px;
             font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; overflow: hidden;
         }
-        .splash-container { text-align: center; animation: fadeIn 1.2s ease-in-out; }
+        .splash-container { text-align: center; animation: fadeIn 1.2s ease-in-out; width: 100%; padding: 20px; }
         .logo { width: 250px; height: auto; margin-bottom: 30px; filter: drop-shadow(0 0 15px rgba(255, 153, 51, 0.3)); }
-        .loader-bar { width: 200px; height: 4px; background: rgba(255, 153, 51, 0.2); border-radius: 10px; margin: 0 auto; position: relative; overflow: hidden; }
-        .loader-progress { width: 0%; height: 100%; background: #ff9933; border-radius: 10px; animation: progress 5s ease-in-out forwards; }
-        .loading-text { color: #ffb366; font-size: 12px; margin-top: 10px; opacity: 0.8; }
+        .loader-bar { width: 240px; height: 4px; background: rgba(255, 153, 51, 0.2); border-radius: 10px; margin: 0 auto; position: relative; overflow: hidden; }
+        .loader-progress { width: 0%; height: 100%; background: #ff9933; border-radius: 10px; transition: width 0.4s ease; }
+        .loading-text { color: #ffb366; font-size: 13px; margin-top: 15px; font-weight: 500; min-height: 18px; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        @keyframes progress { 0% { width: 0%; } 100% { width: 100%; } }
     </style>
 </head>
 <body>
 <div class="splash-container">
     <img src="images/logo/CMPR_logo.png" alt="Logo" class="logo">
     <div id="versionText" style="color: #ff9933; font-size: 10px; margin-top: 10px; margin-bottom: 25px; opacity: 0.8;">Version 1.0.0</div>
-    <div class="loader-bar"><div class="loader-progress"></div></div>
-    <div class="loading-text">Loading Database...</div>
+    <div class="loader-bar"><div id="progressBar" class="loader-progress"></div></div>
+    <div id="statusText" class="loading-text">Initializing sync...</div>
+    <div id="errorActions" style="display: none; margin-top: 20px;">
+        <button onclick="sync()" style="padding: 10px 20px; background: #ff9933; border: none; border-radius: 5px; color: black; font-weight: bold; cursor: pointer;">Retry</button>
+    </div>
     <div style="margin-top: 50px; color: #ff9933; font-size: 10px; font-weight: bold; opacity: 0.6; letter-spacing: 1px;">POWERED BY<br>THE LOUNGE & CHESS LOUNGE</div>
 </div>
-<script>
-    // Prevent right-click and dev tools
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.addEventListener('keydown', e => {
-        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I','C','J'].includes(e.key)) || (e.ctrlKey && ['U','S'].includes(e.key))) {
-            e.preventDefault(); return false;
-        }
-    });
 
-    // Redirect to index.html after 5 seconds
-    setTimeout(function() {
-        window.location.href = 'index.html';
-    }, 5000);
+<script>
+const GITHUB_TOKEN = "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";
+const historyAPI = "https://api.github.com/repos/mythrilh3ml0ck/ChessMatesPHRatings/contents/CMP/ratinghistory";
+const nationalAPI = "https://api.github.com/repos/mythrilh3ml0ck/ChessMatesPHRatings/contents/CMP/nationalrating";
+
+const DB_NAME = "RatingDB";
+const STORE_NAME = "cache";
+
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
+        };
+        request.onsuccess = (e) => resolve(e.target.result);
+        request.onerror = (e) => reject(e.target.error);
+    });
+}
+
+function saveToDB(key, data) {
+    return openDB().then(db => {
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, "readwrite");
+            tx.objectStore(STORE_NAME).put(data, key);
+            tx.oncomplete = () => resolve();
+            tx.onerror = (e) => reject(e.target.error);
+        });
+    });
+}
+
+function updateUI(percent, text, isError = false) {
+    document.getElementById("progressBar").style.width = percent + "%";
+    const status = document.getElementById("statusText");
+    status.innerText = text;
+    status.style.color = isError ? "#F87171" : "#ffb366";
+    document.getElementById("errorActions").style.display = isError ? "block" : "none";
+}
+
+function parseCSV(text) {
+    if (!text || !text.trim()) return { h: [], r: [] };
+    const cleanText = text.replace(/^\uFEFF/, '').trim();
+    const lines = cleanText.split(/\r?\n/).filter(l => l.trim().length > 0);
+    if (lines.length === 0) return { h: [], r: [] };
+
+    const splitLine = (line) => {
+        const values = []; let cur = ''; let inside = false;
+        for (let i = 0; i < line.length; i++) {
+            if (line[i] === '"') inside = !inside;
+            else if (line[i] === ',' && !inside) { values.push(cur.trim()); cur = ''; }
+            else cur += line[i];
+        }
+        values.push(cur.trim());
+        return values.map(v => v.replace(/^"|"$/g, '').trim());
+    };
+
+    const firstLineValues = splitLine(lines[0]);
+    const headerKeywords = ["lastname", "firstname", "rtgnat", "rtg_nat", "title", "sex", "idno", "name"];
+    const isHeader = firstLineValues.some(v => headerKeywords.includes(v.toLowerCase().replace(/[^a-z]/g, '')));
+
+    let headers = isHeader ? firstLineValues : ["TITLE", "LastName", "FirstName", "SEX", "Rtg_Nat"];
+    let rows = lines.slice(isHeader ? 1 : 0).map(splitLine);
+
+    return { h: headers, r: rows };
+}
+
+function finalizeSync() {
+    localStorage.setItem("has_synced", "true");
+    localStorage.setItem("last_sync_time", Date.now().toString());
+    updateUI(100, "Database ready!");
+    setTimeout(() => { window.location.replace('index.html'); }, 800);
+}
+
+async function sync() {
+    try {
+        updateUI(5, "Connecting...");
+        const headers = { "Authorization": `token ${GITHUB_TOKEN}` };
+        let response = await fetch(historyAPI, { headers });
+        if (!response.ok) response = await fetch(historyAPI);
+        if (!response.ok) throw new Error("Connection failed.");
+
+        const data = await response.json();
+        const months = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+        let monthlyFiles = data.filter(f => f.name.toLowerCase().endsWith(".csv") && months.some(m => f.name.toLowerCase().startsWith(m)))
+            .sort((a, b) => {
+                try {
+                    const partsA = a.name.replace(".csv", "").split(/[_-]/);
+                    const partsB = b.name.replace(".csv", "").split(/[_-]/);
+                    return new Date(partsB[0] + " 1, " + partsB[1]) - new Date(partsA[0] + " 1, " + partsA[1]);
+                } catch(e) { return 0; }
+            });
+
+        const csvCache = {};
+        let loaded = 0;
+        const total = monthlyFiles.length + 1;
+
+        for (const file of monthlyFiles) {
+            try {
+                const res = await fetch(file.download_url || file.url);
+                if (res.ok) csvCache[file.name] = parseCSV(await res.text());
+            } catch (e) {}
+            loaded++;
+            updateUI(10 + (loaded / total * 70), `Loading ${file.name}...`);
+        }
+
+        try {
+            let nRes = await fetch(nationalAPI, { headers });
+            if (!nRes.ok) nRes = await fetch(nationalAPI);
+            if (nRes.ok) {
+                const nData = await nRes.json();
+                const rapid = nData.find(f => f.name.toLowerCase() === "phrapid.csv");
+                if (rapid) {
+                    const rRes = await fetch(rapid.download_url || rapid.url);
+                    if (rRes.ok) csvCache["PHRapid.csv"] = parseCSV(await rRes.text());
+                }
+            }
+        } catch (e) {}
+
+        updateUI(95, "Saving database...");
+        await saveToDB("rating_cache", csvCache);
+        finalizeSync();
+    } catch (e) {
+        console.error("Sync error:", e);
+        updateUI(50, "Error: " + (e.message || "Unknown error"), true);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', sync);
 </script>
 </body>
 </html>

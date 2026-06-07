@@ -36,12 +36,9 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+        justify-content: flex-start;
         user-select: none;
         -webkit-user-select: none;
-    }
-
-    header {
-        display: none;
     }
 
     .container {
@@ -125,19 +122,6 @@
         box-shadow: 0 0 0 3px rgba(255, 165, 0, 0.1);
     }
 
-    .search-btn {
-        background: var(--orange);
-        color: #000;
-        border: none;
-        padding: 16px;
-        border-radius: 12px;
-        font-weight: 700;
-        font-size: 16px;
-        cursor: pointer;
-        transition: 0.2s;
-        width: 100%;
-    }
-
     .results {
         margin-top: 12px;
         text-align: left;
@@ -161,29 +145,8 @@
         text-align: left;
     }
 
-    #mainView, #profile {
-        width: 100%;
-    }
-
-    .profile {
-        display: none;
-        text-align: center;
-    }
-
-    .back-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 16px;
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        color: var(--text-main);
-        border-radius: 10px;
-        cursor: pointer;
-        margin-bottom: 24px;
-        font-size: 14px;
-        font-weight: 600;
-    }
+    #mainView, #profile { width: 100%; }
+    .profile { display: none; text-align: center; }
 
     .profile-header {
         margin-bottom: 24px;
@@ -193,25 +156,9 @@
         justify-content: center;
     }
 
-    .profile-name {
-        font-size: 28px;
-        font-weight: 800;
-        margin: 0;
-        line-height: 1.2;
-        text-align: center;
-    }
-
-    .profile-title {
-        color: var(--orange);
-    }
-
-    .profile-rating {
-        color: var(--orange);
-        font-size: 20px;
-        font-weight: 700;
-        margin-top: 8px;
-        text-align: center;
-    }
+    .profile-name { font-size: 28px; font-weight: 800; margin: 0; line-height: 1.2; text-align: center; }
+    .profile-title { color: var(--orange); }
+    .profile-rating { color: var(--orange); font-size: 20px; font-weight: 700; margin-top: 8px; text-align: center; }
 
     .card {
         background: var(--bg-card);
@@ -225,32 +172,12 @@
         justify-content: center;
     }
 
-    .history-table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 280px;
-    }
-
-    .history-table th {
-        text-align: center;
-        color: var(--text-muted);
-        font-size: 12px;
-        text-transform: uppercase;
-        padding-bottom: 12px;
-        letter-spacing: 0.05em;
-    }
-
-    .history-table td {
-        padding: 14px 0;
-        border-top: 1px solid var(--border);
-        font-size: 15px;
-        text-align: center;
-    }
+    .history-table { width: 100%; border-collapse: collapse; min-width: 280px; }
+    .history-table th { text-align: center; color: var(--text-muted); font-size: 12px; text-transform: uppercase; padding-bottom: 12px; letter-spacing: 0.05em; }
+    .history-table td { padding: 14px 0; border-top: 1px solid var(--border); font-size: 15px; text-align: center; }
 
     .change-up { color: #4ADE80; font-weight: 700; }
     .change-down { color: #F87171; font-weight: 700; }
-
-    .hide-change .change-col { display: none; }
 
     footer {
         padding: 40px 20px;
@@ -262,28 +189,9 @@
     }
 
     @media (min-width: 768px) {
-        .container, .header-content {
-            max-width: 800px;
-        }
-        .hero-title {
-            font-size: 48px;
-        }
-        .hero-subtitle {
-            font-size: 18px;
-        }
-        .search-container {
-            width: 100%;
-            max-width: 600px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .hero-title {
-            font-size: 28px;
-        }
-        .profile-name {
-            font-size: 24px;
-        }
+        .container { max-width: 800px; }
+        .hero-title { font-size: 48px; }
+        .hero-subtitle { font-size: 18px; }
     }
 </style>
 </head>
@@ -298,44 +206,29 @@
         <div class="search-container">
             <div class="search-input-wrapper">
                 <div class="search-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="16.65" y1="16.65" x2="21" y2="21"/></svg>
                 </div>
-                <input type="text" id="searchBox" placeholder="LastName..." autocomplete="off">
+                <input type="text" id="searchBox" placeholder="LastName, FirstName..." autocomplete="off">
             </div>
         </div>
-
         <div class="results" id="results"></div>
     </div>
 
     <div class="profile" id="profile">
-        <img src="images/logo/CMPR_Logo.png"
-             class="hero-logo"
-             onclick="goBack()"
-             style="cursor: pointer; max-width: 150px; margin-bottom: 20px;"
-             alt="Logo">
-
+        <img src="images/logo/CMPR_Logo.png" class="hero-logo" onclick="goBack()" style="cursor: pointer; max-width: 120px; margin-bottom: 20px;" alt="Logo">
         <div class="profile-header">
             <div>
                 <h2 id="playerName" class="profile-name"></h2>
                 <div id="playerRating" class="profile-rating"></div>
             </div>
         </div>
-
         <h3 id="historyTitle" style="margin: 0; font-size: 18px;">Chessmates Philippine Rating History</h3>
-
         <div class="card" id="historyCard">
             <table class="history-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Rating</th>
-                        <th class="change-col">+/-</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>Date</th><th>Rating</th><th class="change-col">+/-</th></tr></thead>
                 <tbody id="ratingHistoryBody"></tbody>
             </table>
         </div>
-
         <div class="card" id="chartCard">
             <canvas id="ratingChart" style="max-height: 200px;"></canvas>
         </div>
@@ -347,151 +240,127 @@
 </footer>
 
 <script>
-// Prevent right-click, source view, and dev tools
 document.addEventListener('contextmenu', e => e.preventDefault());
-document.addEventListener('keydown', e => {
-    if (
-        e.key === 'F12' ||
-        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C' || e.key === 'J')) ||
-        (e.ctrlKey && e.key === 'U') ||
-        (e.ctrlKey && e.key === 'S') ||
-        (e.metaKey && e.key === 'u') ||
-        (e.metaKey && e.key === 's')
-    ) {
-        e.preventDefault();
-        return false;
-    }
-});
 
-const GITHUB_TOKEN = "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";
-const AUTH_HEADER = { "Authorization": `token ${GITHUB_TOKEN}` };
-const RAW_HEADER = { ...AUTH_HEADER, "Accept": "application/vnd.github.v3.raw" };
-
-const historyAPI = "https://api.github.com/repos/mythrilh3ml0ck/ChessMatesPHRatings/contents/CMP/ratinghistory";
-const nationalAPI = "https://api.github.com/repos/mythrilh3ml0ck/ChessMatesPHRatings/contents/CMP/nationalrating";
-let cachedData = [];
-let fallbackData = [];
+let masterIndex = [];
+let fullCache = {};
 let historyFiles = [];
-let playerHistory = [];
-let csvCache = new Map();
 
-async function init() {
-    // 1. Fetch History Independent
-    try {
-        const hRes = await fetch(historyAPI, { headers: AUTH_HEADER });
-        if (hRes.ok) {
-            const hData = await hRes.json();
-            if (Array.isArray(hData)) {
-                const months = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
-                let monthlyFiles = hData.filter(f => {
-                    const name = f.name.toLowerCase();
-                    return name.endsWith(".csv") && months.some(m => name.startsWith(m));
-                });
+const DB_NAME = "RatingDB";
+const STORE_NAME = "cache";
 
-                historyFiles = monthlyFiles.sort((a, b) => {
-                    try {
-                        const dateA = new Date(a.name.replace(".csv", "").replace(/[_-]/g, " "));
-                        const dateB = new Date(b.name.replace(".csv", "").replace(/[_-]/g, " "));
-                        return dateB - dateA;
-                    } catch(e) { return 0; }
-                });
-
-                const allMonthsResults = [];
-                for (const file of historyFiles) {
-                    try {
-                        // Use the most reliable RAW API for authenticated file content retrieval
-                        const mRes = await fetch(file.url, { headers: RAW_HEADER });
-                        if (mRes.ok) {
-                            const text = await mRes.text();
-                            const parsed = parseCSV(text);
-                            if (parsed.length > 0) {
-                                csvCache.set(file.name, parsed);
-                                allMonthsResults.push(parsed);
-                            }
-                        }
-                    } catch (err) {}
-                }
-
-                if (allMonthsResults.length > 0) {
-                    const latestMonthData = allMonthsResults[0];
-                    let playerMap = new Map();
-                    latestMonthData.forEach(p => {
-                        const ln = getLN(p).toLowerCase();
-                        const fn = getFN(p).toLowerCase();
-                        if (!ln && !fn) return;
-                        const id = getID(p) || (ln + "|" + fn);
-                        if (!playerMap.has(id)) playerMap.set(id, p);
-                    });
-                    cachedData = Array.from(playerMap.values());
-                }
-            }
-        }
-    } catch (e) { console.warn("History fetch failed", e); }
-
-    // 2. Fetch National Independent
-    try {
-        const nRes = await fetch(nationalAPI, { headers: AUTH_HEADER });
-        if (nRes.ok) {
-            const nData = await nRes.json();
-            const rapidFile = Array.isArray(nData) ? nData.find(f => f.name.toLowerCase() === "phrapid.csv") : null;
-            if (rapidFile) {
-                const rRes = await fetch(rapidFile.url, { headers: RAW_HEADER });
-                if (rRes.ok) fallbackData = parseCSV(await rRes.text());
-            }
-        }
-    } catch (e) { console.warn("National fetch failed", e); }
+function getFromDB(key) {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onsuccess = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) { resolve(null); return; }
+            const tx = db.transaction(STORE_NAME, "readonly");
+            const req = tx.objectStore(STORE_NAME).get(key);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        };
+        request.onerror = () => reject(request.error);
+    });
 }
 
-function parseCSV(text) {
-    if (!text || !text.trim()) return [];
-    const cleanText = text.replace(/^\uFEFF/, '').trim();
-    const lines = cleanText.split(/\r?\n/).filter(l => l.trim().length > 0);
-    if (lines.length < 2) return [];
-
-    const headers = lines[0].split(",").map(h => h.trim().replace(/^"|"$/g, ''));
-
-    return lines.slice(1).map(line => {
-        const values = [];
-        let cur = '';
-        let insideQuotes = false;
-        for (let i = 0; i < line.length; i++) {
-            if (line[i] === '"') insideQuotes = !insideQuotes;
-            else if (line[i] === ',' && !insideQuotes) { values.push(cur.trim()); cur = ''; }
-            else cur += line[i];
-        }
-        values.push(cur.trim());
+function processFile(fileData) {
+    if (!fileData || !fileData.h || !fileData.r) return [];
+    return fileData.r.map(row => {
         const obj = {};
-        headers.forEach((h, i) => { if (h) obj[h] = (values[i] || "").replace(/^"|"$/g, '').trim(); });
+        fileData.h.forEach((h, i) => { obj[h] = row[i] || ""; });
         return obj;
     });
 }
 
-function getVal(p, key) {
-    if (!p) return "";
-    const k = key.toLowerCase().replace(/[\s_]/g, '');
-    const actualKey = Object.keys(p).find(o => o.toLowerCase().replace(/[\s_]/g, '') === k);
-    return actualKey ? (p[actualKey] || "").toString().trim() : "";
+async function init() {
+    try {
+        const cache = await getFromDB("rating_cache");
+
+        if (!cache) {
+            window.location.replace('splash.html');
+            return;
+        }
+
+        fullCache = cache;
+
+        historyFiles = Object.keys(fullCache)
+            .filter(name => name !== "PHRapid.csv")
+            .sort((a, b) => {
+                try {
+                    const partsA = a.replace(".csv", "").split(/[_-]/);
+                    const partsB = b.replace(".csv", "").split(/[_-]/);
+                    return new Date(partsB[0] + " 1, " + partsB[1]) - new Date(partsA[0] + " 1, " + partsA[1]);
+                } catch(e) { return 0; }
+            });
+
+        let playerMap = new Map();
+
+        // 1. Latest CMP Month (Priority)
+        if (historyFiles.length > 0) {
+            processFile(fullCache[historyFiles[0]]).forEach(p => {
+                const ln = getLN(p).toLowerCase();
+                const fn = getFN(p).toLowerCase();
+                if (ln) {
+                    const id = getID(p) || (ln + "|" + fn);
+                    if (!playerMap.has(id)) playerMap.set(id, p);
+                }
+            });
+        }
+
+        // 2. PHRapid Fallback
+        processFile(fullCache["PHRapid.csv"]).forEach(p => {
+            const ln = getLN(p).toLowerCase();
+            const fn = getFN(p).toLowerCase();
+            if (ln) {
+                const id = getID(p) || (ln + "|" + fn);
+                if (!playerMap.has(id)) playerMap.set(id, p);
+            }
+        });
+
+        masterIndex = Array.from(playerMap.values());
+
+    } catch (e) {
+        console.error("Init Error:", e);
+    }
 }
 
-function getLN(p) { return getVal(p, "LastName"); }
-function getFN(p) { return getVal(p, "FirstName"); }
+function getVal(p, key) {
+    if (!p) return "";
+    const ck = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const ak = Object.keys(p).find(o => o.toLowerCase().replace(/[^a-z0-9]/g, '') === ck);
+    return ak ? (p[ak] || "").toString().trim() : "";
+}
+
+function getLN(p) {
+    let ln = getVal(p, "LastName");
+    if (!ln) {
+        const full = getVal(p, "Name");
+        if (full.includes(",")) ln = full.split(",")[0].trim();
+        else ln = full;
+    }
+    return ln;
+}
+function getFN(p) {
+    let fn = getVal(p, "FirstName");
+    if (!fn) {
+        const full = getVal(p, "Name");
+        if (full.includes(",")) fn = full.split(",")[1].trim();
+    }
+    return fn;
+}
 function getID(p) { return getVal(p, "IDNo") || getVal(p, "ID") || getVal(p, "No"); }
 function getRTG(p) { return getVal(p, "RtgNat") || "0"; }
 function getTitle(p) { return getVal(p, "TITLE"); }
 
-function normalize(s) {
-    return (s || "").toLowerCase().replace(/jr\.?$/, "jr").replace(/[^a-z0-9]/g, "");
-}
+function normalize(s) { return (s || "").toLowerCase().replace(/jr\.?$/, "jr").replace(/[^a-z0-9]/g, ""); }
 
 function isSamePlayer(p1, p2) {
-    const id1 = getID(p1);
-    const id2 = getID(p2);
+    const id1 = getID(p1); const id2 = getID(p2);
     if (id1 && id2 && id1 === id2) return true;
-    const ln1 = normalize(getLN(p1));
-    const ln2 = normalize(getLN(p2));
-    const fn1 = normalize(getFN(p1));
-    const fn2 = normalize(getFN(p2));
-    return ln1 && fn1 && ln1 === ln2 && fn1 === fn2;
+    const ln1 = normalize(getLN(p1)); const ln2 = normalize(getLN(p2));
+    const fn1 = normalize(getFN(p1)); const fn2 = normalize(getFN(p2));
+    return ln1 && ln1 === ln2 && fn1 && fn1 === fn2;
 }
 
 document.getElementById("searchBox").addEventListener("input", function() {
@@ -500,30 +369,20 @@ document.getElementById("searchBox").addEventListener("input", function() {
 
 function performSearch(query) {
     const container = document.getElementById("results");
-    if (query.length < 2) {
-        container.style.display = "none";
-        return;
-    }
+    if (query.length < 2) { container.style.display = "none"; return; }
 
     const parts = query.split(",").map(p => p.trim());
-    const lnQuery = parts[0];
-    const fnQuery = parts[1] || "";
+    const lnQ = parts[0];
+    const fnQ = parts[1] || "";
 
-    const filterFunc = (p) => {
+    const results = masterIndex.filter(p => {
         const ln = getLN(p).toLowerCase();
         const fn = getFN(p).toLowerCase();
-        if (fnQuery) {
-            return ln.startsWith(lnQuery) && fn.startsWith(fnQuery);
-        }
-        return ln.startsWith(lnQuery);
-    };
 
-    let latestResults = cachedData.filter(filterFunc);
-    let fallbackResults = fallbackData.filter(filterFunc).map(p => ({ ...p, isNational: true }));
+        const lnMatch = ln.startsWith(lnQ);
+        const fnMatch = fnQ ? fn.startsWith(fnQ) : true;
 
-    let results = [...latestResults];
-    fallbackResults.forEach(fp => {
-        if (!results.some(rp => isSamePlayer(rp, fp))) results.push(fp);
+        return lnMatch && fnMatch;
     });
 
     if (results.length > 0) {
@@ -542,46 +401,33 @@ function performSearch(query) {
     }
 }
 
-async function showProfile(player) {
+async function showProfile(p) {
     history.pushState({ view: 'profile' }, '');
     document.getElementById("mainView").style.display = "none";
     document.getElementById("profile").style.display = "block";
+    document.getElementById("historyTitle").style.display = "none";
+    document.getElementById("historyCard").style.display = "none";
+    document.getElementById("chartCard").style.display = "none";
 
-    const historyTitle = document.getElementById("historyTitle");
-    const historyCard = document.getElementById("historyCard");
-    const chartCard = document.getElementById("chartCard");
-
-    historyTitle.style.display = "none";
-    historyCard.style.display = "none";
-    chartCard.style.display = "none";
-
-    const pTitle = getTitle(player);
-    const titleText = (pTitle && pTitle !== "0") ? pTitle : "";
+    const title = getTitle(p);
     const nameEl = document.getElementById("playerName");
     nameEl.innerHTML = "";
-    if (titleText) {
-        const titleSpan = document.createElement("span");
-        titleSpan.className = "profile-title";
-        titleSpan.innerText = titleText + " ";
-        nameEl.appendChild(titleSpan);
+    if (title && title !== "0") {
+        const span = document.createElement("span"); span.className = "profile-title";
+        span.innerText = title + " "; nameEl.appendChild(span);
     }
-    nameEl.appendChild(document.createTextNode(getFN(player) + " " + getLN(player)));
+    nameEl.appendChild(document.createTextNode(getFN(p) + " " + getLN(p)));
 
-    const ratingEl = document.getElementById("playerRating");
-
-    playerHistory = [];
-    historyFiles.forEach(file => {
-        const data = csvCache.get(file.name);
-        if (data) {
-            const found = data.find(p => isSamePlayer(p, player));
-            if (found) playerHistory.push({ date: file.name.replace(".csv",""), rating: getRTG(found) });
-        }
+    const playerHistory = [];
+    historyFiles.forEach(fn => {
+        const match = processFile(fullCache[fn]).find(x => isSamePlayer(x, p));
+        if (match) playerHistory.push({ date: fn.replace(".csv",""), rating: getRTG(match) });
     });
 
-    const nationalPlayer = fallbackData.find(p => isSamePlayer(p, player));
-    if (nationalPlayer) {
-        const nRtg = getRTG(nationalPlayer);
-        if (nRtg && nRtg !== "0") playerHistory.push({ date: "National/Initial", rating: nRtg });
+    const nat = processFile(fullCache["PHRapid.csv"]).find(x => isSamePlayer(x, p));
+    if (nat) {
+        const r = getRTG(nat);
+        if (r && r !== "0") playerHistory.push({ date: "National/Initial", rating: r });
     }
 
     if (playerHistory.length > 0) {
@@ -592,18 +438,15 @@ async function showProfile(player) {
         });
 
         const hasCmp = playerHistory.some(h => h.date !== "National/Initial");
-        ratingEl.innerText = (hasCmp ? "CMP Rating: " : "National Rating: ") + playerHistory[0].rating;
-        ratingEl.style.display = "block";
+        document.getElementById("playerRating").innerText = (hasCmp ? "CMP Rating: " : "National Rating: ") + playerHistory[0].rating;
 
         if (hasCmp) {
-            historyTitle.style.display = "block";
-            historyCard.style.display = "flex";
-            chartCard.style.display = "flex";
+            document.getElementById("historyTitle").style.display = "block";
+            document.getElementById("historyCard").style.display = "flex";
+            document.getElementById("chartCard").style.display = "flex";
             displayHistory(playerHistory);
             drawChart(playerHistory);
         }
-    } else {
-        ratingEl.style.display = "none";
     }
 }
 
@@ -616,64 +459,48 @@ window.onpopstate = () => {
     if (window.ratingChartInstance) window.ratingChartInstance.destroy();
 };
 
-function displayHistory(history) {
-    const tbody = document.getElementById("ratingHistoryBody");
-    tbody.innerHTML = "";
-    history.forEach((h, index) => {
+function displayHistory(h) {
+    const b = document.getElementById("ratingHistoryBody"); b.innerHTML = "";
+    h.forEach((x, i) => {
         const tr = document.createElement("tr");
-        const dateCell = document.createElement("td");
-        dateCell.innerText = h.date.replace("_", " ");
-        const ratingCell = document.createElement("td");
-        ratingCell.innerText = h.rating;
-        const changeCell = document.createElement("td");
-        changeCell.className = "change-col";
-        const next = history[index + 1];
-        if (next) {
-            const diff = parseInt(h.rating) - parseInt(next.rating);
-            if (diff > 0) { changeCell.innerText = "+" + diff; changeCell.className = "change-col change-up"; }
-            else if (diff < 0) { changeCell.innerText = diff; changeCell.className = "change-col change-down"; }
-            else changeCell.innerText = "0";
-        } else changeCell.innerText = "-";
-        tr.appendChild(dateCell);
-        tr.appendChild(ratingCell);
-        tr.appendChild(changeCell);
-        tbody.appendChild(tr);
+        const d = document.createElement("td"); d.innerText = x.date.replace("_", " ");
+        const r = document.createElement("td"); r.innerText = x.rating;
+        const c = document.createElement("td"); c.className = "change-col";
+        const n = h[i+1];
+        if (n) {
+            const diff = parseInt(x.rating) - parseInt(n.rating);
+            if (diff > 0) { c.innerText = "+" + diff; c.className += " change-up"; }
+            else if (diff < 0) { c.innerText = diff; c.className += " change-down"; }
+            else c.innerText = "0";
+        } else c.innerText = "-";
+        tr.append(d, r, c); b.append(tr);
     });
 }
 
-function drawChart(history) {
+function drawChart(h) {
     const ctx = document.getElementById("ratingChart");
     if (window.ratingChartInstance) window.ratingChartInstance.destroy();
-    const chronologicalHistory = [...history].sort((a, b) => {
+    const sorted = [...h].sort((a, b) => {
         if (a.date === "National/Initial") return -1;
         if (b.date === "National/Initial") return 1;
         return new Date(a.date.replace("_", " ")) - new Date(b.date.replace("_", " "));
     });
-
     window.ratingChartInstance = new Chart(ctx, {
         type: "line",
         data: {
-            labels: chronologicalHistory.map(h => h.date.replace("_"," ")),
+            labels: sorted.map(x => x.date.replace("_"," ")),
             datasets: [{
-                label: "Rating",
-                data: chronologicalHistory.map(h => h.rating),
-                borderColor: "#FFA500",
-                backgroundColor: "rgba(255, 165, 0, 0.1)",
-                borderWidth: 2,
-                pointRadius: 4,
-                pointBackgroundColor: "#000",
-                pointBorderColor: "#FFA500",
-                tension: 0.3,
-                fill: true
+                label: "Rating", data: sorted.map(x => x.rating),
+                borderColor: "#FFA500", backgroundColor: "rgba(255, 165, 0, 0.1)",
+                borderWidth: 2, pointRadius: 4, tension: 0.3, fill: true
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: {
-                y: { grid: { color: "#222" }, ticks: { color: "#94A3B8", font: { size: 10 } } },
-                x: { grid: { display: false }, ticks: { color: "#94A3B8", font: { size: 10 } } }
+                y: { grid: { color: "#222" }, ticks: { color: "#94A3B8" } },
+                x: { grid: { display: false }, ticks: { color: "#94A3B8" } }
             }
         }
     });
