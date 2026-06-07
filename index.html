@@ -186,7 +186,7 @@
 
     .results {
         margin-top: 12px;
-        text-align: left; /* CHANGED */
+        text-align: left;
         max-width: 600px;
         margin-left: auto;
         margin-right: auto;
@@ -204,7 +204,7 @@
         border-bottom: 1px solid var(--border);
         cursor: pointer;
         font-size: 16px;
-        text-align: left; /* CHANGED */
+        text-align: left;
     }
 
     #mainView, #profile {
@@ -355,7 +355,7 @@
 
 <div class="container">
     <div id="mainView">
-        <img src="https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/chessmates_logo.png" class="hero-logo" alt="Main Logo">
+        <img src="images/logo/CMPR_Logo.png" class="hero-logo" alt="Main Logo">
         <h1 class="hero-title">Chessmates <br> Philippine Rating</h1>
         <p class="hero-subtitle">Track rating movements for CMP Club</p>
 
@@ -364,7 +364,7 @@
                 <div class="search-icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 </div>
-                <input type="text" id="searchBox" placeholder="LastName, FirstName or ID..." autocomplete="off">
+                <input type="text" id="searchBox" placeholder="LastName..." autocomplete="off">
             </div>
         </div>
 
@@ -415,115 +415,134 @@
 </footer>
 
 <script>
-const GITHUB_TOKEN = "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";
+const GITHUB_TOKEN = "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";
 const AUTH_HEADER = { "Authorization": `token ${GITHUB_TOKEN}` };
 const RAW_HEADER = { ...AUTH_HEADER, "Accept": "application/vnd.github.v3.raw" };
 
-const repoAPI = "https://api.github.com/repos/mythrilh3ml0ck/ChessMatesPHRatings/contents/CMP";
+const historyAPI = "https://api.github.com/repos/mythrilh3ml0ck/ChessMatesPHRatings/contents/CMP/ratinghistory";
+const nationalAPI = "https://api.github.com/repos/mythrilh3ml0ck/ChessMatesPHRatings/contents/CMP/nationalrating";
 let cachedData = [];
 let fallbackData = [];
 let historyFiles = [];
 let playerHistory = [];
 let csvCache = new Map();
-let allCmpData = [];
 
 async function init() {
+    // 1. Fetch History Independent
     try {
-        const res = await fetch(repoAPI, { headers: AUTH_HEADER });
-        const data = await res.json();
-        const months = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+        const hRes = await fetch(historyAPI, { headers: AUTH_HEADER });
+        if (hRes.ok) {
+            const hData = await hRes.json();
+            if (Array.isArray(hData)) {
+                const months = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+                let monthlyFiles = hData.filter(f => {
+                    const name = f.name.toLowerCase();
+                    return name.endsWith(".csv") && months.some(m => name.startsWith(m));
+                });
 
-        let monthlyFiles = data.filter(f => {
-            const name = f.name.toLowerCase();
-            return name.endsWith(".csv") && months.some(m => name.startsWith(m));
-        });
+                historyFiles = monthlyFiles.sort((a, b) => {
+                    try {
+                        const dateA = new Date(a.name.replace(".csv", "").replace(/[_-]/g, " "));
+                        const dateB = new Date(b.name.replace(".csv", "").replace(/[_-]/g, " "));
+                        return dateB - dateA;
+                    } catch(e) { return 0; }
+                });
 
-        historyFiles = monthlyFiles.sort((a, b) => {
-            const dateA = new Date(a.name.replace(".csv", "").replace("_", " "));
-            const dateB = new Date(b.name.replace(".csv", "").replace("_", " "));
-            return dateB - dateA; // Newest first
-        });
-
-        // Load ALL monthly data for better search results
-        const loadPromises = historyFiles.map(async (file) => {
-            const hRes = await fetch(file.url, { headers: RAW_HEADER });
-            const text = await hRes.text();
-            const parsed = parseCSV(text);
-            csvCache.set(file.name, parsed);
-            return parsed;
-        });
-
-        const allMonthsResults = await Promise.all(loadPromises);
-        // Combine all unique players from all months for the search index
-        // We iterate newest to oldest so cachedData has the most recent record for each player
-        let playerMap = new Map();
-        allMonthsResults.forEach(monthData => {
-            monthData.forEach(p => {
-                const id = getID(p) || (getLN(p) + "|" + getFN(p)).toLowerCase();
-                if (!playerMap.has(id)) {
-                    playerMap.set(id, p);
+                const allMonthsResults = [];
+                for (const file of historyFiles) {
+                    try {
+                        const mRes = await fetch(file.url, { headers: RAW_HEADER });
+                        if (mRes.ok) {
+                            const text = await mRes.text();
+                            const parsed = parseCSV(text);
+                            if (parsed.length > 0) {
+                                csvCache.set(file.name, parsed);
+                                allMonthsResults.push(parsed);
+                            }
+                        }
+                    } catch (err) {}
                 }
-            });
-        });
-        cachedData = Array.from(playerMap.values());
 
-        const rapidFile = data.find(f => f.name.toLowerCase() === "phrapid.csv");
-        if (rapidFile) {
-            const rapidRes = await fetch(rapidFile.url, { headers: RAW_HEADER });
-            fallbackData = parseCSV(await rapidRes.text());
+                if (allMonthsResults.length > 0) {
+                    const latestMonthData = allMonthsResults[0];
+                    let playerMap = new Map();
+                    latestMonthData.forEach(p => {
+                        const ln = getLN(p).toLowerCase();
+                        const fn = getFN(p).toLowerCase();
+                        if (!ln && !fn) return;
+                        const id = getID(p) || (ln + "|" + fn);
+                        if (!playerMap.has(id)) playerMap.set(id, p);
+                    });
+                    cachedData = Array.from(playerMap.values());
+                }
+            }
         }
-    } catch (e) { console.error("Initialization failed", e); }
+    } catch (e) { console.warn("History fetch failed", e); }
+
+    // 2. Fetch National Independent
+    try {
+        const nRes = await fetch(nationalAPI, { headers: AUTH_HEADER });
+        if (nRes.ok) {
+            const nData = await nRes.json();
+            const rapidFile = Array.isArray(nData) ? nData.find(f => f.name.toLowerCase() === "phrapid.csv") : null;
+            if (rapidFile) {
+                const rRes = await fetch(rapidFile.url, { headers: RAW_HEADER });
+                if (rRes.ok) fallbackData = parseCSV(await rRes.text());
+            }
+        }
+    } catch (e) { console.warn("National fetch failed", e); }
 }
 
 function parseCSV(text) {
-    const cleanText = text.replace(/^\uFEFF/, '');
+    if (!text || !text.trim()) return [];
+    const cleanText = text.replace(/^\uFEFF/, '').trim();
     const lines = cleanText.split(/\r?\n/).filter(l => l.trim().length > 0);
-    if (lines.length < 1) return [];
+    if (lines.length < 2) return [];
 
-    const headers = lines[0].split(",").map(h => h.trim());
+    const headers = lines[0].split(",").map(h => h.trim().replace(/^"|"$/g, ''));
 
     return lines.slice(1).map(line => {
-        const values = []; let cur = ''; let q = false;
+        const values = [];
+        let cur = '';
+        let insideQuotes = false;
         for (let i = 0; i < line.length; i++) {
-            if (line[i] === '"') q = !q;
-            else if (line[i] === ',' && !q) { values.push(cur.trim()); cur = ''; }
+            if (line[i] === '"') insideQuotes = !insideQuotes;
+            else if (line[i] === ',' && !insideQuotes) { values.push(cur.trim()); cur = ''; }
             else cur += line[i];
         }
         values.push(cur.trim());
         const obj = {};
-        headers.forEach((h, i) => {
-            obj[h] = (values[i] || "").replace(/^"|"$/g, '').trim();
-        });
+        headers.forEach((h, i) => { if (h) obj[h] = (values[i] || "").replace(/^"|"$/g, '').trim(); });
         return obj;
     });
 }
+
+function getVal(p, key) {
+    if (!p) return "";
+    const k = key.toLowerCase().replace(/[\s_]/g, '');
+    const actualKey = Object.keys(p).find(o => o.toLowerCase().replace(/[\s_]/g, '') === k);
+    return actualKey ? (p[actualKey] || "").toString().trim() : "";
+}
+
+function getLN(p) { return getVal(p, "LastName"); }
+function getFN(p) { return getVal(p, "FirstName"); }
+function getID(p) { return getVal(p, "IDNo") || getVal(p, "ID") || getVal(p, "No"); }
+function getRTG(p) { return getVal(p, "RtgNat") || "0"; }
+function getTitle(p) { return getVal(p, "TITLE"); }
 
 function normalize(s) {
     return (s || "").toLowerCase().replace(/jr\.?$/, "jr").replace(/[^a-z0-9]/g, "");
 }
 
-// Robust data accessors
-function getLN(p) { return (p.LastName || p.NAME || p['Last Name'] || "").trim(); }
-function getFN(p) { return (p.FirstName || p['FIRST NAME'] || p['First Name'] || p.FirstNamme || "").trim(); }
-function getID(p) { return (p.ID_No || p.No || p.ID || "").trim(); }
-function getRTG(p) { return (p.CMP_Rtg || p.Rtg_Nat || p.Rating || p.Rtg || "0").trim(); }
-function getTitle(p) { return (p.TITLE || p.Title || "").trim(); }
-
 function isSamePlayer(p1, p2) {
     const id1 = getID(p1);
     const id2 = getID(p2);
     if (id1 && id2 && id1 === id2) return true;
-
     const ln1 = normalize(getLN(p1));
     const ln2 = normalize(getLN(p2));
     const fn1 = normalize(getFN(p1));
     const fn2 = normalize(getFN(p2));
-
-    return ln1 === ln2 && fn1 === fn2;
-}
-
-function triggerSearch() {
-    performSearch(document.getElementById("searchBox").value.toLowerCase().trim());
+    return ln1 && fn1 && ln1 === ln2 && fn1 === fn2;
 }
 
 document.getElementById("searchBox").addEventListener("input", function() {
@@ -532,42 +551,46 @@ document.getElementById("searchBox").addEventListener("input", function() {
 
 function performSearch(query) {
     const container = document.getElementById("results");
-    if (query.length < 2) { container.style.display = "none"; return; }
+    if (query.length < 2) {
+        container.style.display = "none";
+        return;
+    }
+
+    const parts = query.split(",").map(p => p.trim());
+    const lnQuery = parts[0];
+    const fnQuery = parts[1] || "";
 
     const filterFunc = (p) => {
         const ln = getLN(p).toLowerCase();
         const fn = getFN(p).toLowerCase();
-        const id = getID(p).toLowerCase();
-
-        if (query.includes(',')) {
-            const parts = query.split(',').map(x => x.trim());
-            return ln.startsWith(parts[0]) && fn.startsWith(parts[1] || "");
+        if (fnQuery) {
+            return ln.startsWith(lnQuery) && fn.startsWith(fnQuery);
         }
-        return ln.startsWith(query) || id.startsWith(query);
+        return ln.startsWith(lnQuery);
     };
 
     let latestResults = cachedData.filter(filterFunc);
     let fallbackResults = fallbackData.filter(filterFunc).map(p => ({ ...p, isNational: true }));
 
-    // Avoid duplicates - prioritize CMP data
     let results = [...latestResults];
     fallbackResults.forEach(fp => {
-        if (!results.some(rp => isSamePlayer(rp, fp))) {
-            results.push(fp);
-        }
+        if (!results.some(rp => isSamePlayer(rp, fp))) results.push(fp);
     });
 
     if (results.length > 0) {
         container.innerHTML = "";
         container.style.display = "block";
-        results.forEach(p => {
+        results.slice(0, 30).forEach(p => {
             const div = document.createElement("div");
             div.className = "result-item";
             div.innerText = `${getLN(p)}, ${getFN(p)}`;
             div.onclick = () => showProfile(p);
             container.appendChild(div);
         });
-    } else { container.style.display = "none"; }
+    } else {
+        container.innerHTML = "<div class='result-item'>No players found.</div>";
+        container.style.display = "block";
+    }
 }
 
 async function showProfile(player) {
@@ -597,47 +620,35 @@ async function showProfile(player) {
 
     const ratingEl = document.getElementById("playerRating");
 
-    // Determine history first to get correct label
     playerHistory = [];
     historyFiles.forEach(file => {
         const data = csvCache.get(file.name);
         if (data) {
             const found = data.find(p => isSamePlayer(p, player));
-            if (found) {
-                playerHistory.push({ date: file.name.replace(".csv",""), rating: getRTG(found) });
-            }
+            if (found) playerHistory.push({ date: file.name.replace(".csv",""), rating: getRTG(found) });
         }
     });
 
-    // Check if player has a National rating
     const nationalPlayer = fallbackData.find(p => isSamePlayer(p, player));
     if (nationalPlayer) {
         const nRtg = getRTG(nationalPlayer);
-        if (nRtg && nRtg !== "0") {
-            playerHistory.push({ date: "National/Initial", rating: nRtg });
-        }
+        if (nRtg && nRtg !== "0") playerHistory.push({ date: "National/Initial", rating: nRtg });
     }
 
     if (playerHistory.length > 0) {
-        // Sort for table: Newest first
         playerHistory.sort((a, b) => {
             if (a.date === "National/Initial") return 1;
             if (b.date === "National/Initial") return -1;
             return new Date(b.date.replace("_", " ")) - new Date(a.date.replace("_", " "));
         });
 
-        // Show CMP label if any CMP record exists
         const hasCmp = playerHistory.some(h => h.date !== "National/Initial");
-        const displayRating = playerHistory[0].rating;
-
-        ratingEl.innerText = (hasCmp ? "CMP Rating: " : "National Rating: ") + displayRating;
+        ratingEl.innerText = (hasCmp ? "CMP Rating: " : "National Rating: ") + playerHistory[0].rating;
         ratingEl.style.display = "block";
 
         if (hasCmp) {
             historyTitle.style.display = "block";
-            historyTitle.innerText = "Chessmates Philippine Rating History";
             historyCard.style.display = "flex";
-            historyCard.classList.remove("hide-change");
             chartCard.style.display = "flex";
             displayHistory(playerHistory);
             drawChart(playerHistory);
@@ -659,8 +670,6 @@ window.onpopstate = () => {
 function displayHistory(history) {
     const tbody = document.getElementById("ratingHistoryBody");
     tbody.innerHTML = "";
-    const showChange = !document.getElementById("historyCard").classList.contains("hide-change");
-
     history.forEach((h, index) => {
         const tr = document.createElement("tr");
         const dateCell = document.createElement("td");
@@ -670,12 +679,12 @@ function displayHistory(history) {
         const changeCell = document.createElement("td");
         changeCell.className = "change-col";
         const next = history[index + 1];
-        if (next && showChange) {
+        if (next) {
             const diff = parseInt(h.rating) - parseInt(next.rating);
             if (diff > 0) { changeCell.innerText = "+" + diff; changeCell.className = "change-col change-up"; }
             else if (diff < 0) { changeCell.innerText = diff; changeCell.className = "change-col change-down"; }
-            else { changeCell.innerText = "0"; }
-        } else { changeCell.innerText = "-"; }
+            else changeCell.innerText = "0";
+        } else changeCell.innerText = "-";
         tr.appendChild(dateCell);
         tr.appendChild(ratingCell);
         tr.appendChild(changeCell);
@@ -686,9 +695,9 @@ function displayHistory(history) {
 function drawChart(history) {
     const ctx = document.getElementById("ratingChart");
     if (window.ratingChartInstance) window.ratingChartInstance.destroy();
-
-    // Explicitly sort from oldest to newest for the graph
     const chronologicalHistory = [...history].sort((a, b) => {
+        if (a.date === "National/Initial") return -1;
+        if (b.date === "National/Initial") return 1;
         return new Date(a.date.replace("_", " ")) - new Date(b.date.replace("_", " "));
     });
 
