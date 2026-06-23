@@ -296,6 +296,7 @@ async function init() {
             });
 
         let playerMap = new Map();
+        let seenPlayers = new Set(); // For O(1) deduplication
 
         // 1. CMP Months (Priority - Latest to Oldest)
         historyFiles.forEach(fn => {
@@ -304,16 +305,14 @@ async function init() {
                 const fnP = getFN(p);
                 if (!ln) return;
 
-                // Better ID: Use numeric ID if available, otherwise normalized Name
-                const id = getID(p) || (normalize(ln) + "|" + normalize(fnP));
+                const normName = normalize(ln) + "|" + normalize(fnP);
+                const id = getID(p);
 
-                if (!playerMap.has(id)) {
-                    // Double check if player already exists under a slightly different name (e.g. w/o initial)
-                    let existing = false;
-                    for (let entry of playerMap.values()) {
-                        if (isSamePlayer(entry, p)) { existing = true; break; }
-                    }
-                    if (!existing) playerMap.set(id, p);
+                // If we haven't seen this player's ID or normalized name yet
+                if ((id && !seenPlayers.has(id)) || !seenPlayers.has(normName)) {
+                    playerMap.set(id || normName, p);
+                    if (id) seenPlayers.add(id);
+                    seenPlayers.add(normName);
                 }
             });
         });
@@ -325,15 +324,13 @@ async function init() {
                 const fnP = getFN(p);
                 if (!ln) return;
 
-                const id = getID(p) || (normalize(ln) + "|" + normalize(fnP));
+                const normName = normalize(ln) + "|" + normalize(fnP);
+                const id = getID(p);
 
-                // Strict CMP Priority: check if this player exists anywhere in historyFiles
-                let inHistory = false;
-                for (let entry of playerMap.values()) {
-                    if (isSamePlayer(entry, p)) { inHistory = true; break; }
+                // Only add if this player has NO record in CMP history
+                if (!seenPlayers.has(normName) && (!id || !seenPlayers.has(id))) {
+                    playerMap.set(id || normName, p);
                 }
-
-                if (!inHistory) playerMap.set(id, p);
             });
         }
 
@@ -420,30 +417,27 @@ function performSearch(query) {
     const fnQ = parts[1] || "";
 
     const results = masterIndex.filter(p => {
-        const ln = getLN(p).toLowerCase();
-        const fn = getFN(p).toLowerCase();
+        const ln = getLN(p);
+        const fn = getFN(p);
 
-        // Comparison versions (stripping dots and extra spaces)
-        const clean = (s) => s.replace(/\./g, "").trim();
-        const lnC = clean(ln);
-        const fnC = clean(fn);
-        const lnQC = clean(lnQ);
-        const fnQC = clean(fnQ);
+        const nLN = normalize(ln);
+        const nFN = normalize(fn);
 
         if (hasComma) {
-            const match = (q, val) => {
+            const match = (q, val, nVal) => {
                 if (!q) return true;
-                if (q.includes("*")) return val.includes(q.replace(/\*/g, ""));
-                // Check for startsWith on both raw and clean versions
-                return val.startsWith(q) || val.replace(/\./g, "").startsWith(q);
+                if (q.includes("*")) return val.toLowerCase().includes(q.replace(/\*/g, ""));
+                const nQ = normalize(q);
+                // Match if query is prefix of either original name or normalized name
+                return val.toLowerCase().startsWith(q) || nVal.startsWith(nQ);
             };
-            return match(lnQC, lnC) && match(fnQC, fnC);
+            return match(lnQ, ln, nLN) && match(fnQ, fn, nFN);
         } else {
             if (query.includes("*")) {
-                const q = query.replace(/\*/g, "").toLowerCase();
-                return lnC.includes(q) || fnC.includes(q);
+                const cq = query.replace(/\*/g, "");
+                return ln.toLowerCase().includes(cq) || fn.toLowerCase().includes(cq);
             }
-            return lnC.startsWith(query.replace(/\./g, ""));
+            return nLN.startsWith(normalize(query));
         }
     });
 
