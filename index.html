@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Chessmates Philippines Ratings (Standalone)</title>
+<title>Chessmates Philippines Ratings</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
     :root {
@@ -53,6 +53,16 @@
         top: 0;
         z-index: 100;
         width: 100%;
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        width: 100%;
+        max-width: 800px;
+        transition: max-width 0.3s ease;
     }
 
     .container {
@@ -221,7 +231,7 @@
 
 <div class="container">
     <div id="mainView">
-        <img src="https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/images/logo/CMPR_Logo.png" class="hero-logo" alt="Main Logo">
+        <img src="images/logo/CMPR_Logo.png" class="hero-logo" alt="Main Logo">
         <h1 class="hero-title">Chessmates <br> Philippine Rating</h1>
         <p class="hero-subtitle">Track rating movements for CMP Club</p>
 
@@ -232,13 +242,12 @@
                 </div>
                 <input type="text" id="searchBox" placeholder="LastName, FirstName..." autocomplete="off">
             </div>
-            <div id="syncStatus" style="font-size: 11px; color: var(--orange); margin-top: 4px; text-align: center; display: none;">Syncing ratings...</div>
         </div>
         <div class="results" id="results"></div>
     </div>
 
     <div class="profile" id="profile">
-        <img src="https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/images/logo/CMPR_Logo.png" class="hero-logo" onclick="goBack()" style="cursor: pointer; max-width: 120px; margin-bottom: 20px;" alt="Logo">
+        <img src="images/logo/CMPR_Logo.png" class="hero-logo" onclick="goBack()" style="cursor: pointer; max-width: 120px; margin-bottom: 20px;" alt="Logo">
         <div class="profile-header">
             <div>
                 <h2 id="playerName" class="profile-name"></h2>
@@ -275,43 +284,23 @@ document.addEventListener('contextmenu', e => e.preventDefault());
 let masterIndex = [];
 let fullCache = {};
 let historyFiles = [];
-let playerRegistry = new Map();
 
-const historyAPI = "https://api.github.com/repos/mythrilh3ml0ck/ChessMatesPHRatings/contents/CMP/ratinghistory";
-const RAW_BASE = "https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/CMP";
+const DB_NAME = "RatingDB";
+const STORE_NAME = "cache";
 
-async function fetchWithTimeout(url, timeout = 10000) {
-    return Promise.race([
-        fetch(url),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeout))
-    ]);
-}
-
-function parseCSV(text) {
-    if (!text || !text.trim()) return { h: [], r: [] };
-    const cleanText = text.replace(/^\uFEFF/, '').trim();
-    const lines = cleanText.split(/\r?\n/).filter(l => l.trim().length > 0);
-    if (lines.length === 0) return { h: [], r: [] };
-
-    const splitLine = (line) => {
-        const values = []; let cur = ''; let inside = false;
-        for (let i = 0; i < line.length; i++) {
-            if (line[i] === '"') inside = !inside;
-            else if (line[i] === ',' && !inside) { values.push(cur.trim()); cur = ''; }
-            else cur += line[i];
-        }
-        values.push(cur.trim());
-        return values.map(v => v.replace(/^"|"$/g, '').trim());
-    };
-
-    const firstLineValues = splitLine(lines[0]);
-    const headerKeywords = ["lastname", "firstname", "rtgnat", "rtg_nat", "title", "sex", "idno", "name"];
-    const isHeader = firstLineValues.some(v => headerKeywords.includes(v.toLowerCase().replace(/[^a-z]/g, '')));
-
-    let headers = isHeader ? firstLineValues : ["TITLE", "LastName", "FirstName", "SEX", "Rtg_Nat"];
-    let rows = lines.slice(isHeader ? 1 : 0).map(splitLine);
-
-    return { h: headers, r: rows };
+function getFromDB(key) {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onsuccess = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) { resolve(null); return; }
+            const tx = db.transaction(STORE_NAME, "readonly");
+            const req = tx.objectStore(STORE_NAME).get(key);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        };
+        request.onerror = () => reject(request.error);
+    });
 }
 
 function processFile(fileData) {
@@ -323,103 +312,74 @@ function processFile(fileData) {
     });
 }
 
-function rebuildSearchIndex() {
-    if (!fullCache || Object.keys(fullCache).length === 0) return;
+async function init() {
+    try {
+        const cache = await getFromDB("rating_cache");
 
-    historyFiles = Object.keys(fullCache)
-        .filter(name => name !== "PHRapid.csv")
-        .sort((a, b) => {
-            try {
-                const dA = new Date(a.replace(".csv", "").replace(/[_-]/g, " "));
-                const dB = new Date(b.replace(".csv", "").replace(/[_-]/g, " "));
-                if (isNaN(dA.getTime()) || isNaN(dB.getTime())) return b.localeCompare(a);
-                return dB - dA;
-            } catch(e) { return 0; }
+        if (!cache) {
+            window.location.replace('splash.html');
+            return;
+        }
+
+        fullCache = cache;
+
+        historyFiles = Object.keys(fullCache)
+            .filter(name => name !== "PHRapid.csv")
+            .sort((a, b) => {
+                try {
+                    const partsA = a.replace(".csv", "").split(/[_-]/);
+                    const partsB = b.replace(".csv", "").split(/[_-]/);
+                    return new Date(partsB[0] + " 1, " + partsB[1]) - new Date(partsA[0] + " 1, " + partsA[1]);
+                } catch(e) { return 0; }
+            });
+
+        let playerMap = new Map();
+
+        // 1. CMP Months (Priority - Latest to Oldest)
+        historyFiles.forEach(fn => {
+            processFile(fullCache[fn]).forEach(p => {
+                const ln = getLN(p);
+                const fnP = getFN(p);
+                if (!ln) return;
+
+                // Better ID: Use numeric ID if available, otherwise normalized Name
+                const id = getID(p) || (normalize(ln) + "|" + normalize(fnP));
+
+                if (!playerMap.has(id)) {
+                    // Double check if player already exists under a slightly different name (e.g. w/o initial)
+                    let existing = false;
+                    for (let entry of playerMap.values()) {
+                        if (isSamePlayer(entry, p)) { existing = true; break; }
+                    }
+                    if (!existing) playerMap.set(id, p);
+                }
+            });
         });
 
-    playerRegistry.clear();
-    const allFiles = [...historyFiles].reverse(); // Oldest to Newest
-    if (fullCache["PHRapid.csv"]) allFiles.unshift("PHRapid.csv");
+        // 2. PHRapid Fallback (Only if not in any CMP history)
+        if (fullCache["PHRapid.csv"]) {
+            processFile(fullCache["PHRapid.csv"]).forEach(p => {
+                const ln = getLN(p);
+                const fnP = getFN(p);
+                if (!ln) return;
 
-    allFiles.forEach(fn => {
-        processFile(fullCache[fn]).forEach(p => {
-            const ln = getLN(p).toLowerCase();
-            const fnP = getFN(p).toLowerCase();
-            if (ln) {
-                const id = getID(p) || (ln + "|" + fnP);
-                playerRegistry.set(id, p);
-            }
-        });
-    });
+                const id = getID(p) || (normalize(ln) + "|" + normalize(fnP));
 
-    masterIndex = Array.from(playerRegistry.values());
-}
+                // Strict CMP Priority: check if this player exists anywhere in historyFiles
+                let inHistory = false;
+                for (let entry of playerMap.values()) {
+                    if (isSamePlayer(entry, p)) { inHistory = true; break; }
+                }
 
-async function sync2() {
-    const statusEl = document.getElementById("syncStatus");
-    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-    statusEl.style.display = "block";
-    statusEl.innerText = "Connecting to database...";
-
-    // 1. Direct RAW Sync for National Ratings
-    try {
-        const res = await fetchWithTimeout(`${RAW_BASE}/nationalrating/PHRapid.csv?v=${Date.now()}`);
-        if (res.ok) {
-            fullCache["PHRapid.csv"] = parseCSV(await res.text());
-            rebuildSearchIndex();
-            statusEl.innerText = "National ratings loaded.";
+                if (!inHistory) playerMap.set(id, p);
+            });
         }
-    } catch (e) { console.error("National fetch failed", e); }
 
-    // 2. Direct RAW Sync for Recent Months
-    const now = new Date();
-    const guesses = [];
-    for (let i = 0; i < 4; i++) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        guesses.push(months[d.getMonth()] + "_" + d.getFullYear() + ".csv");
+        masterIndex = Array.from(playerMap.values());
+
+    } catch (e) {
+        console.error("Init Error:", e);
     }
-
-    for (const fileName of guesses) {
-        if (fullCache[fileName]) continue;
-        try {
-            const res = await fetchWithTimeout(`${RAW_BASE}/ratinghistory/${fileName}?v=${Date.now()}`);
-            if (res.ok) {
-                fullCache[fileName] = parseCSV(await res.text());
-                rebuildSearchIndex();
-                statusEl.innerText = `Loaded ${fileName.split('_')[0]} ratings.`;
-            }
-        } catch (e) {}
-    }
-
-    // 3. Full Discovery via API
-    try {
-        const response = await fetchWithTimeout(historyAPI);
-        if (response.ok) {
-            const data = await response.json();
-            const monthlyFiles = data.filter(f => f.name.toLowerCase().endsWith(".csv"));
-            const newFiles = monthlyFiles.filter(f => !fullCache[f.name]);
-
-            for (let i = 0; i < newFiles.length; i += 4) {
-                const chunk = newFiles.slice(i, i + 4);
-                await Promise.all(chunk.map(async (file) => {
-                    try {
-                        const res = await fetchWithTimeout(file.download_url || file.url);
-                        if (res.ok) fullCache[file.name] = parseCSV(await res.text());
-                    } catch (e) {}
-                }));
-                rebuildSearchIndex();
-                statusEl.innerText = `Syncing history... (${Math.min(i+4, newFiles.length)}/${newFiles.length})`;
-            }
-        }
-    } catch (e) { console.warn("API sync limited."); }
-
-    statusEl.innerText = masterIndex.length > 0 ? "Ratings Updated." : "Sync failed. Offline mode.";
-    setTimeout(() => { statusEl.style.display = "none"; }, 3000);
-}
-
-function init() {
-    sync2();
 }
 
 function getVal(p, key) {
@@ -433,8 +393,12 @@ function getLN(p) {
     let ln = getVal(p, "LastName");
     if (!ln) {
         const full = getVal(p, "Name");
-        if (full.includes(",")) ln = full.split(",")[0].trim();
-        else ln = full;
+        if (full.includes(",")) {
+            ln = full.split(",")[0].trim();
+        } else {
+            const parts = full.trim().split(/\s+/);
+            ln = parts[parts.length - 1] || "";
+        }
     }
     return ln;
 }
@@ -442,7 +406,12 @@ function getFN(p) {
     let fn = getVal(p, "FirstName");
     if (!fn) {
         const full = getVal(p, "Name");
-        if (full.includes(",")) fn = full.split(",")[1].trim();
+        if (full.includes(",")) {
+            fn = full.split(",")[1].trim();
+        } else {
+            const parts = full.trim().split(/\s+/);
+            fn = parts.slice(0, parts.length - 1).join(" ");
+        }
     }
     return fn;
 }
@@ -450,14 +419,29 @@ function getID(p) { return getVal(p, "IDNo") || getVal(p, "ID") || getVal(p, "No
 function getRTG(p) { return getVal(p, "RtgNat") || "0"; }
 function getTitle(p) { return getVal(p, "TITLE"); }
 
-function normalize(s) { return (s || "").toLowerCase().replace(/jr\.?$/, "jr").replace(/[^a-z0-9]/g, ""); }
+function normalize(s) {
+    return (s || "").toLowerCase()
+        .replace(/jr\.?$/, "jr")
+        .replace(/\s[a-z]\.?\s/g, " ") // Remove middle initials like " M. " or " M "
+        .replace(/\s[a-z]\.?$/g, "")   // Remove trailing middle initials like " M."
+        .replace(/[^a-z0-9]/g, "");    // Remove all non-alphanumeric
+}
 
 function isSamePlayer(p1, p2) {
     const id1 = getID(p1); const id2 = getID(p2);
     if (id1 && id2 && id1 === id2) return true;
+
+    // Compare normalized names
     const ln1 = normalize(getLN(p1)); const ln2 = normalize(getLN(p2));
     const fn1 = normalize(getFN(p1)); const fn2 = normalize(getFN(p2));
-    return ln1 && ln1 === ln2 && fn1 && fn1 === fn2;
+
+    if (ln1 && ln1 === ln2 && fn1 && fn1 === fn2) return true;
+
+    // Fallback: check if one first name is a prefix of the other (handles "Ervil" vs "Ervil M.")
+    if (ln1 && ln1 === ln2) {
+        if (fn1.startsWith(fn2) || fn2.startsWith(fn1)) return true;
+    }
+    return false;
 }
 
 document.getElementById("searchBox").addEventListener("input", function() {
@@ -468,19 +452,66 @@ function performSearch(query) {
     const container = document.getElementById("results");
     if (query.length < 2) { container.style.display = "none"; return; }
 
-    if (masterIndex.length === 0) {
-        container.innerHTML = "<div class='result-item'>Connecting to database...</div>";
-        container.style.display = "block";
-        return;
-    }
-
-    const tokens = query.toLowerCase().split(/[\s,]+/).filter(t => t.length > 0);
+    const hasComma = query.includes(",");
+    const parts = query.split(",").map(p => p.trim());
+    const lnQ = parts[0] || "";
+    const fnQ = parts[1] || "";
 
     const results = masterIndex.filter(p => {
-        const ln = (getLN(p) || "").toLowerCase();
-        const fn = (getFN(p) || "").toLowerCase();
-        const fullName = `${ln} ${fn}`;
-        return tokens.every(token => fullName.includes(token));
+        const ln = getLN(p).toLowerCase();
+        const fn = getFN(p).toLowerCase();
+
+        // Comparison versions (stripping dots and extra spaces)
+        const clean = (s) => s.replace(/\./g, "").trim();
+        const lnC = clean(ln);
+        const fnC = clean(fn);
+        const lnQC = clean(lnQ);
+        const fnQC = clean(fnQ);
+
+        if (hasComma) {
+            const match = (q, val) => {
+                if (!q) return true;
+                if (q.includes("*")) return val.includes(q.replace(/\*/g, ""));
+                // Check for startsWith on both raw and clean versions
+                return val.startsWith(q) || val.replace(/\./g, "").startsWith(q);
+            };
+            return match(lnQC, lnC) && match(fnQC, fnC);
+        } else {
+            if (query.includes("*")) {
+                const q = query.replace(/\*/g, "").toLowerCase();
+                return lnC.includes(q) || fnC.includes(q);
+            }
+            return lnC.startsWith(query.replace(/\./g, ""));
+        }
+    });
+
+    // Sort results: 1. Exact matches first, 2. Shorter matches, 3. Alphabetical
+    results.sort((a, b) => {
+        const lnA = getLN(a).toLowerCase();
+        const lnB = getLN(b).toLowerCase();
+        const fnA = getFN(a).toLowerCase();
+        const fnB = getFN(b).toLowerCase();
+
+        if (hasComma) {
+            // Priority 1: Exact Last Name match
+            const exactLNA = lnA === lnQ;
+            const exactLNB = lnB === lnQ;
+            if (exactLNA !== exactLNB) return exactLNA ? -1 : 1;
+
+            // Priority 2: Exact First Name match
+            const exactFNA = fnA === fnQ;
+            const exactFNB = fnB === fnQ;
+            if (exactFNA !== exactFNB) return exactFNA ? -1 : 1;
+        }
+
+        // Priority 3: Shorter total name length
+        const lenA = lnA.length + fnA.length;
+        const lenB = lnB.length + fnB.length;
+        if (lenA !== lenB) return lenA - lenB;
+
+        // Priority 4: Alphabetical
+        if (lnA !== lnB) return lnA.localeCompare(lnB);
+        return fnA.localeCompare(fnB);
     });
 
     if (results.length > 0) {
@@ -532,10 +563,7 @@ async function showProfile(p) {
         playerHistory.sort((a, b) => {
             if (a.date === "National/Initial") return 1;
             if (b.date === "National/Initial") return -1;
-            const dA = new Date(a.date.replace(/[_-]/g, " "));
-            const dB = new Date(b.date.replace(/[_-]/g, " "));
-            if (isNaN(dA.getTime()) || isNaN(dB.getTime())) return b.date.localeCompare(a.date);
-            return dB - dA;
+            return new Date(b.date.replace("_", " ")) - new Date(a.date.replace("_", " "));
         });
 
         const hasCmp = playerHistory.some(h => h.date !== "National/Initial");
@@ -584,10 +612,7 @@ function drawChart(h) {
     const sorted = [...h].sort((a, b) => {
         if (a.date === "National/Initial") return -1;
         if (b.date === "National/Initial") return 1;
-        const dA = new Date(a.date.replace(/[_-]/g, " "));
-        const dB = new Date(b.date.replace(/[_-]/g, " "));
-        if (isNaN(dA.getTime()) || isNaN(dB.getTime())) return a.date.localeCompare(b.date);
-        return dA - dB;
+        return new Date(a.date.replace("_", " ")) - new Date(b.date.replace("_", " "));
     });
     window.ratingChartInstance = new Chart(ctx, {
         type: "line",

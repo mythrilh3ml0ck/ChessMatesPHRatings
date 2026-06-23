@@ -44,6 +44,7 @@
     .container {
         flex: 1 0 auto;
         padding: 40px 16px;
+        padding-top: calc(40px + env(safe-area-inset-top));
         max-width: 480px;
         width: 100%;
         display: flex;
@@ -296,27 +297,45 @@ async function init() {
 
         let playerMap = new Map();
 
-        // 1. Latest CMP Month (Priority)
-        if (historyFiles.length > 0) {
-            processFile(fullCache[historyFiles[0]]).forEach(p => {
-                const ln = getLN(p).toLowerCase();
-                const fn = getFN(p).toLowerCase();
-                if (ln) {
-                    const id = getID(p) || (ln + "|" + fn);
-                    if (!playerMap.has(id)) playerMap.set(id, p);
+        // 1. CMP Months (Priority - Latest to Oldest)
+        historyFiles.forEach(fn => {
+            processFile(fullCache[fn]).forEach(p => {
+                const ln = getLN(p);
+                const fnP = getFN(p);
+                if (!ln) return;
+
+                // Better ID: Use numeric ID if available, otherwise normalized Name
+                const id = getID(p) || (normalize(ln) + "|" + normalize(fnP));
+
+                if (!playerMap.has(id)) {
+                    // Double check if player already exists under a slightly different name (e.g. w/o initial)
+                    let existing = false;
+                    for (let entry of playerMap.values()) {
+                        if (isSamePlayer(entry, p)) { existing = true; break; }
+                    }
+                    if (!existing) playerMap.set(id, p);
                 }
             });
-        }
-
-        // 2. PHRapid Fallback
-        processFile(fullCache["PHRapid.csv"]).forEach(p => {
-            const ln = getLN(p).toLowerCase();
-            const fn = getFN(p).toLowerCase();
-            if (ln) {
-                const id = getID(p) || (ln + "|" + fn);
-                if (!playerMap.has(id)) playerMap.set(id, p);
-            }
         });
+
+        // 2. PHRapid Fallback (Only if not in any CMP history)
+        if (fullCache["PHRapid.csv"]) {
+            processFile(fullCache["PHRapid.csv"]).forEach(p => {
+                const ln = getLN(p);
+                const fnP = getFN(p);
+                if (!ln) return;
+
+                const id = getID(p) || (normalize(ln) + "|" + normalize(fnP));
+
+                // Strict CMP Priority: check if this player exists anywhere in historyFiles
+                let inHistory = false;
+                for (let entry of playerMap.values()) {
+                    if (isSamePlayer(entry, p)) { inHistory = true; break; }
+                }
+
+                if (!inHistory) playerMap.set(id, p);
+            });
+        }
 
         masterIndex = Array.from(playerMap.values());
 
@@ -336,8 +355,12 @@ function getLN(p) {
     let ln = getVal(p, "LastName");
     if (!ln) {
         const full = getVal(p, "Name");
-        if (full.includes(",")) ln = full.split(",")[0].trim();
-        else ln = full;
+        if (full.includes(",")) {
+            ln = full.split(",")[0].trim();
+        } else {
+            const parts = full.trim().split(/\s+/);
+            ln = parts[parts.length - 1] || "";
+        }
     }
     return ln;
 }
@@ -345,7 +368,12 @@ function getFN(p) {
     let fn = getVal(p, "FirstName");
     if (!fn) {
         const full = getVal(p, "Name");
-        if (full.includes(",")) fn = full.split(",")[1].trim();
+        if (full.includes(",")) {
+            fn = full.split(",")[1].trim();
+        } else {
+            const parts = full.trim().split(/\s+/);
+            fn = parts.slice(0, parts.length - 1).join(" ");
+        }
     }
     return fn;
 }
@@ -353,14 +381,29 @@ function getID(p) { return getVal(p, "IDNo") || getVal(p, "ID") || getVal(p, "No
 function getRTG(p) { return getVal(p, "RtgNat") || "0"; }
 function getTitle(p) { return getVal(p, "TITLE"); }
 
-function normalize(s) { return (s || "").toLowerCase().replace(/jr\.?$/, "jr").replace(/[^a-z0-9]/g, ""); }
+function normalize(s) {
+    return (s || "").toLowerCase()
+        .replace(/jr\.?$/, "jr")
+        .replace(/\s[a-z]\.?\s/g, " ") // Remove middle initials like " M. " or " M "
+        .replace(/\s[a-z]\.?$/g, "")   // Remove trailing middle initials like " M."
+        .replace(/[^a-z0-9]/g, "");    // Remove all non-alphanumeric
+}
 
 function isSamePlayer(p1, p2) {
     const id1 = getID(p1); const id2 = getID(p2);
     if (id1 && id2 && id1 === id2) return true;
+
+    // Compare normalized names
     const ln1 = normalize(getLN(p1)); const ln2 = normalize(getLN(p2));
     const fn1 = normalize(getFN(p1)); const fn2 = normalize(getFN(p2));
-    return ln1 && ln1 === ln2 && fn1 && fn1 === fn2;
+
+    if (ln1 && ln1 === ln2 && fn1 && fn1 === fn2) return true;
+
+    // Fallback: check if one first name is a prefix of the other (handles "Ervil" vs "Ervil M.")
+    if (ln1 && ln1 === ln2) {
+        if (fn1.startsWith(fn2) || fn2.startsWith(fn1)) return true;
+    }
+    return false;
 }
 
 document.getElementById("searchBox").addEventListener("input", function() {
@@ -371,18 +414,66 @@ function performSearch(query) {
     const container = document.getElementById("results");
     if (query.length < 2) { container.style.display = "none"; return; }
 
+    const hasComma = query.includes(",");
     const parts = query.split(",").map(p => p.trim());
-    const lnQ = parts[0];
+    const lnQ = parts[0] || "";
     const fnQ = parts[1] || "";
 
     const results = masterIndex.filter(p => {
         const ln = getLN(p).toLowerCase();
         const fn = getFN(p).toLowerCase();
 
-        const lnMatch = ln.startsWith(lnQ);
-        const fnMatch = fnQ ? fn.startsWith(fnQ) : true;
+        // Comparison versions (stripping dots and extra spaces)
+        const clean = (s) => s.replace(/\./g, "").trim();
+        const lnC = clean(ln);
+        const fnC = clean(fn);
+        const lnQC = clean(lnQ);
+        const fnQC = clean(fnQ);
 
-        return lnMatch && fnMatch;
+        if (hasComma) {
+            const match = (q, val) => {
+                if (!q) return true;
+                if (q.includes("*")) return val.includes(q.replace(/\*/g, ""));
+                // Check for startsWith on both raw and clean versions
+                return val.startsWith(q) || val.replace(/\./g, "").startsWith(q);
+            };
+            return match(lnQC, lnC) && match(fnQC, fnC);
+        } else {
+            if (query.includes("*")) {
+                const q = query.replace(/\*/g, "").toLowerCase();
+                return lnC.includes(q) || fnC.includes(q);
+            }
+            return lnC.startsWith(query.replace(/\./g, ""));
+        }
+    });
+
+    // Sort results: 1. Exact matches first, 2. Shorter matches, 3. Alphabetical
+    results.sort((a, b) => {
+        const lnA = getLN(a).toLowerCase();
+        const lnB = getLN(b).toLowerCase();
+        const fnA = getFN(a).toLowerCase();
+        const fnB = getFN(b).toLowerCase();
+
+        if (hasComma) {
+            // Priority 1: Exact Last Name match
+            const exactLNA = lnA === lnQ;
+            const exactLNB = lnB === lnQ;
+            if (exactLNA !== exactLNB) return exactLNA ? -1 : 1;
+
+            // Priority 2: Exact First Name match
+            const exactFNA = fnA === fnQ;
+            const exactFNB = fnB === fnQ;
+            if (exactFNA !== exactFNB) return exactFNA ? -1 : 1;
+        }
+
+        // Priority 3: Shorter total name length
+        const lenA = lnA.length + fnA.length;
+        const lenB = lnB.length + fnB.length;
+        if (lenA !== lenB) return lenA - lenB;
+
+        // Priority 4: Alphabetical
+        if (lnA !== lnB) return lnA.localeCompare(lnB);
+        return fnA.localeCompare(fnB);
     });
 
     if (results.length > 0) {

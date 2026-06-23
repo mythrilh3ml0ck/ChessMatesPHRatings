@@ -43,7 +43,7 @@
         flex: 1 0 auto;
         padding: 20px 16px;
         padding-top: calc(20px + env(safe-area-inset-top));
-        max-width: 600px;
+        max-width: 480px;
         width: 100%;
         display: flex;
         flex-direction: column;
@@ -64,7 +64,7 @@
         font-size: 24px;
         font-weight: 800;
         color: var(--orange);
-        margin: 0 auto 12px auto;
+        margin: 0 auto 24px auto;
         letter-spacing: -0.02em;
         line-height: 1.2;
         text-align: center;
@@ -76,6 +76,7 @@
         border: 1px solid var(--border);
         border-radius: 16px;
         padding: 12px;
+        margin-top: 16px;
         width: 100%;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
@@ -84,7 +85,7 @@
     .rank-table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 450px;
+        min-width: 400px;
     }
 
     .rank-table th {
@@ -99,16 +100,13 @@
     .rank-table td {
         padding: 12px 8px;
         border-bottom: 1px solid var(--border);
-        font-size: 14px;
+        font-size: 13px;
     }
 
-    .player-name {
+    .team-name {
         color: var(--orange);
         font-weight: 700;
     }
-
-    .rank-cell { font-weight: 800; color: var(--text-muted); width: 40px; }
-    .rating-cell { font-weight: 700; text-align: right; width: 80px; }
 
     footer {
         padding: 40px 20px;
@@ -123,6 +121,8 @@
         color: var(--orange);
         font-weight: 700;
         margin-top: 50px;
+        text-align: center;
+        max-width: 300px;
     }
 </style>
 </head>
@@ -143,9 +143,8 @@
             <thead>
                 <tr>
                     <th>Rank</th>
-                    <th>Name</th>
-                    <th>Title</th>
-                    <th style="text-align: right;">Rating</th>
+                    <th>Team</th>
+                    <th>Points</th>
                 </tr>
             </thead>
             <tbody id="rankBody"></tbody>
@@ -158,31 +157,70 @@
 </footer>
 
 <script>
+// Prevent right-click, source view, and dev tools
 document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+    if (
+        e.key === 'F12' ||
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C' || e.key === 'J')) ||
+        (e.ctrlKey && e.key === 'U') ||
+        (e.ctrlKey && e.key === 'S')
+    ) {
+        e.preventDefault();
+        return false;
+    }
+});
 
-const csvURL = "https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/CMP/otherDB/ThailandRanking.csv";
-let allData = [];
+const csvURL = "https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/CMP/otherDB/CMThaiRankDB.csv";
 
 async function loadRankings() {
+    const loadingEl = document.getElementById("loading");
     try {
-        const res = await fetch(csvURL + "?v=" + Date.now());
-        if (!res.ok) throw new Error("Failed to fetch");
+        // cache: "no-store" ensures we get the latest data from GitHub
+        const res = await fetch(csvURL + "?v=" + Date.now(), { cache: "no-store" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+
         const text = await res.text();
-        allData = parseCSV(text);
-        displayRankings(allData);
+        if (!text || text.trim().length === 0) {
+            loadingEl.innerText = "The ranking file is empty.";
+            return;
+        }
+
+        const data = parseCSV(text);
+        if (data.length === 0) {
+            loadingEl.innerHTML = "No ranking data found in file.<br><small style='color:#666'>Format: Rank,Team,Points</small>";
+        } else {
+            displayRankings(data);
+        }
     } catch (e) {
-        document.getElementById("loading").innerText = "Failed to load ranking data.";
-        console.error(e);
+        loadingEl.innerText = "Error: " + e.message;
+        console.error("Load Error:", e);
     }
 }
 
 function parseCSV(text) {
-    const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+    if (!text) return [];
+
+    // BULLETPROOF PARSER:
+    // If the file is missing newlines (all on one line), we restore them.
+    // Pattern: Find where one row ends and the next starts (e.g., "...Points 2,Team,Points...")
+    let raw = text.trim();
+    const hasNewlines = raw.includes("\n") || raw.includes("\r");
+
+    if (!hasNewlines && raw.includes(",")) {
+        // Try to insert newlines before every "number followed by a comma"
+        // EXCEPT for the very first one (the header/rank 1).
+        // e.g., "Rank,Team,Points 1,T1,100 2,T2,200"
+        raw = raw.replace(/(\S+)\s+(\d+,)/g, "$1\n$2");
+    }
+
+    const lines = raw.split(/\r?\n/).filter(l => l.trim().length > 0);
     if (lines.length < 1) return [];
 
+    // The first line is our header
     const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
 
-    return lines.slice(1).map(line => {
+    return lines.slice(1).map((line) => {
         const values = [];
         let cur = '';
         let q = false;
@@ -195,7 +233,11 @@ function parseCSV(text) {
 
         let obj = {};
         headers.forEach((h, i) => {
-            if (h) obj[h] = (values[i] || "").replace(/^"|"$/g, '').trim();
+            if (h) {
+                // If the header name got merged with the first data cell (e.g. "points 1")
+                const cleanH = h.replace(/\s+\d+$/, "");
+                obj[cleanH] = (values[i] || "").replace(/^"|"$/g, '').trim();
+            }
         });
         return obj;
     });
@@ -209,24 +251,18 @@ function displayRankings(data) {
         const tr = document.createElement("tr");
 
         const rankCell = document.createElement("td");
-        rankCell.className = "rank-cell";
         rankCell.innerText = p.rank || (index + 1);
 
-        const nameCell = document.createElement("td");
-        nameCell.className = "player-name";
-        nameCell.innerText = p.name || "";
+        const teamCell = document.createElement("td");
+        teamCell.className = "team-name";
+        teamCell.innerText = p.team || "Unknown";
 
-        const titleCell = document.createElement("td");
-        titleCell.innerText = p.title || "-";
-
-        const ratingCell = document.createElement("td");
-        ratingCell.className = "rating-cell";
-        ratingCell.innerText = p.rating || "0";
+        const pointsCell = document.createElement("td");
+        pointsCell.innerText = p.points || "0";
 
         tr.appendChild(rankCell);
-        tr.appendChild(nameCell);
-        tr.appendChild(titleCell);
-        tr.appendChild(ratingCell);
+        tr.appendChild(teamCell);
+        tr.appendChild(pointsCell);
 
         tbody.appendChild(tr);
     });
