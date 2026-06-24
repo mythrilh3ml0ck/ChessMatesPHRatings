@@ -252,7 +252,8 @@ const STORE_NAME = "cache";
 
 function getFromDB(key) {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, 1);
+        // Must match version in splash.html
+        const request = indexedDB.open(DB_NAME, 2);
         request.onsuccess = (e) => {
             const db = e.target.result;
             if (!db.objectStoreNames.contains(STORE_NAME)) { resolve(null); return; }
@@ -307,10 +308,13 @@ async function init() {
 
                 const normName = normalize(ln) + "|" + normalize(fnP);
                 const id = getID(p);
+                const compositeKey = (id ? id + "|" : "") + normName;
 
-                // If we haven't seen this player's ID or normalized name yet
-                if ((id && !seenPlayers.has(id)) || !seenPlayers.has(normName)) {
-                    playerMap.set(id || normName, p);
+                // If we haven't seen this specific ID+Name combination yet
+                if (!seenPlayers.has(compositeKey)) {
+                    playerMap.set(compositeKey, p);
+                    seenPlayers.add(compositeKey);
+                    // Also track ID and Name separately for simpler lookups
                     if (id) seenPlayers.add(id);
                     seenPlayers.add(normName);
                 }
@@ -326,10 +330,11 @@ async function init() {
 
                 const normName = normalize(ln) + "|" + normalize(fnP);
                 const id = getID(p);
+                const compositeKey = (id ? id + "|" : "") + normName;
 
                 // Only add if this player has NO record in CMP history
-                if (!seenPlayers.has(normName) && (!id || !seenPlayers.has(id))) {
-                    playerMap.set(id || normName, p);
+                if (!seenPlayers.has(compositeKey) && !seenPlayers.has(normName) && (!id || !seenPlayers.has(id))) {
+                    playerMap.set(compositeKey, p);
                 }
             });
         }
@@ -388,10 +393,14 @@ function normalize(s) {
 
 function isSamePlayer(p1, p2) {
     const id1 = getID(p1); const id2 = getID(p2);
-    if (id1 && id2 && id1 === id2) return true;
+    const ln1 = normalize(getLN(p1)); const ln2 = normalize(getLN(p2));
+
+    // If IDs match, we STILL check if last names match to avoid ID collisions
+    if (id1 && id2 && id1 === id2) {
+        return ln1 === ln2;
+    }
 
     // Compare normalized names
-    const ln1 = normalize(getLN(p1)); const ln2 = normalize(getLN(p2));
     const fn1 = normalize(getFN(p1)); const fn2 = normalize(getFN(p2));
 
     if (ln1 && ln1 === ln2 && fn1 && fn1 === fn2) return true;
@@ -424,14 +433,19 @@ function performSearch(query) {
         const nFN = normalize(fn);
 
         if (hasComma) {
-            const match = (q, val, nVal) => {
+            const matchLN = (q, val, nVal) => {
+                if (!q) return true;
+                const nQ = normalize(q);
+                // STRICT matching for last name when comma is used
+                return nVal === nQ;
+            };
+            const matchFN = (q, val, nVal) => {
                 if (!q) return true;
                 if (q.includes("*")) return val.toLowerCase().includes(q.replace(/\*/g, ""));
                 const nQ = normalize(q);
-                // Match if query is prefix of either original name or normalized name
                 return val.toLowerCase().startsWith(q) || nVal.startsWith(nQ);
             };
-            return match(lnQ, ln, nLN) && match(fnQ, fn, nFN);
+            return matchLN(lnQ, ln, nLN) && matchFN(fnQ, fn, nFN);
         } else {
             if (query.includes("*")) {
                 const cq = query.replace(/\*/g, "");

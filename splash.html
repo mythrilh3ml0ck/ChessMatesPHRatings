@@ -45,13 +45,21 @@ const STORE_NAME = "cache";
 
 function openDB() {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, 1);
+        // Bump version to 2 to ensure onupgradeneeded runs if store was missing in v1
+        const request = indexedDB.open(DB_NAME, 2);
         request.onupgradeneeded = (e) => {
             const db = e.target.result;
-            if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
+            console.log("Upgrading DB...");
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME);
+                console.log("Object store created.");
+            }
         };
         request.onsuccess = (e) => resolve(e.target.result);
-        request.onerror = (e) => reject(e.target.error);
+        request.onerror = (e) => {
+            console.error("DB Open Error:", e.target.error);
+            reject(e.target.error);
+        };
     });
 }
 
@@ -108,22 +116,38 @@ function finalizeSync() {
     setTimeout(() => { window.location.replace('index.html'); }, 800);
 }
 
+function enterApp() {
+    window.location.replace('index.html');
+}
+
 async function sync() {
     try {
         updateUI(5, "Connecting...");
         const headers = { "Authorization": `token ${GITHUB_TOKEN}` };
-        let response = await fetch(historyAPI, { headers });
-        if (!response.ok) response = await fetch(historyAPI);
-        if (!response.ok) throw new Error("Connection failed.");
+
+        let response;
+        try {
+            response = await fetch(historyAPI, { headers });
+            if (!response.ok) throw new Error();
+        } catch (e) {
+            console.warn("Auth fetch failed, trying public...");
+            response = await fetch(historyAPI);
+        }
+
+        if (!response.ok) throw new Error("Could not connect to database server.");
 
         const data = await response.json();
+        if (!Array.isArray(data)) throw new Error("Invalid server response.");
+
         const months = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
         let monthlyFiles = data.filter(f => f.name.toLowerCase().endsWith(".csv") && months.some(m => f.name.toLowerCase().startsWith(m)))
             .sort((a, b) => {
                 try {
                     const partsA = a.name.replace(".csv", "").split(/[_-]/);
                     const partsB = b.name.replace(".csv", "").split(/[_-]/);
-                    return new Date(partsB[0] + " 1, " + partsB[1]) - new Date(partsA[0] + " 1, " + partsA[1]);
+                    // Handle formats like "May_2026.csv"
+                    return new Date(partsB[1], months.indexOf(partsB[0].toLowerCase())) -
+                           new Date(partsA[1], months.indexOf(partsA[0].toLowerCase()));
                 } catch(e) { return 0; }
             });
 
@@ -134,16 +158,27 @@ async function sync() {
         for (const file of monthlyFiles) {
             try {
                 const res = await fetch(file.download_url || file.url);
-                if (res.ok) csvCache[file.name] = parseCSV(await res.text());
-            } catch (e) {}
+                if (res.ok) {
+                    const text = await res.text();
+                    if (text.trim()) csvCache[file.name] = parseCSV(text);
+                }
+            } catch (e) {
+                console.error(`Failed to load ${file.name}:`, e);
+            }
             loaded++;
-            updateUI(10 + (loaded / total * 70), `Synchronizing database...`);
+            updateUI(10 + (loaded / total * 70), `Syncing ${file.name.split('_')[0]}...`);
         }
 
         try {
-            let nRes = await fetch(nationalAPI, { headers });
-            if (!nRes.ok) nRes = await fetch(nationalAPI);
-            if (nRes.ok) {
+            updateUI(85, "Fetching National ratings...");
+            let nRes;
+            try {
+                nRes = await fetch(nationalAPI, { headers });
+            } catch(e) {
+                nRes = await fetch(nationalAPI);
+            }
+
+            if (nRes && nRes.ok) {
                 const nData = await nRes.json();
                 const rapid = nData.find(f => f.name.toLowerCase() === "phrapid.csv");
                 if (rapid) {
@@ -151,14 +186,25 @@ async function sync() {
                     if (rRes.ok) csvCache["PHRapid.csv"] = parseCSV(await rRes.text());
                 }
             }
-        } catch (e) {}
+        } catch (e) {
+            console.warn("National API failed:", e);
+        }
+
+        if (Object.keys(csvCache).length === 0) {
+            throw new Error("No data could be retrieved.");
+        }
 
         updateUI(95, "Saving database...");
         await saveToDB("rating_cache", csvCache);
         finalizeSync();
     } catch (e) {
         console.error("Sync error:", e);
-        updateUI(50, "Error: " + (e.message || "Unknown error"), true);
+        updateUI(50, "Sync Failed: " + (e.message || "Unknown error"), true);
+        // Show enter app button if we have some old data
+        if (localStorage.getItem("has_synced") === "true") {
+            const errActions = document.getElementById("errorActions");
+            errActions.innerHTML += '<br><button onclick="enterApp()" style="margin-top:10px; padding: 10px 20px; background: #444; border: none; border-radius: 5px; color: white; cursor: pointer;">Enter with Offline Data</button>';
+        }
     }
 }
 
