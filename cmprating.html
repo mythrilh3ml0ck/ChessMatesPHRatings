@@ -159,7 +159,7 @@ async function showProfile(p) {
     document.getElementById("profile").style.display = "block";
     const titlePrefix = p.prTitle ? `<span style="color: #BA1A1A; font-weight: 900; margin-right: 8px;">${p.prTitle}</span>` : "";
     document.getElementById("playerName").innerHTML = titlePrefix + p.fn + " " + p.ln;
-    document.getElementById("playerRating").innerHTML = `<div style="font-size: 14px; opacity: 0.6; font-weight: 500;">${p.prT === "CMP" ? "CMP Rating" : "PH Rating"}</div><div style="font-size: 32px; font-weight: 900; color: var(--md-sys-color-primary);">${p.prR}</div>`;
+    document.getElementById("playerRating").innerHTML = `<div style="font-size: 14px; opacity: 0.6; font-weight: 500;">${p.prT === "CMP" ? "CMP Rating" : "National Rating"}</div><div style="font-size: 32px; font-weight: 900; color: var(--md-sys-color-primary);">${p.prR}</div>`;
     const body = document.getElementById("ratingHistoryBody");
     body.innerHTML = p.hist.map((h, i) => {
         const next = p.hist[i+1];

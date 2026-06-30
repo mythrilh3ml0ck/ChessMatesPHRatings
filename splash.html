@@ -241,19 +241,23 @@ const helper = {
 };
 
 async function processDataForIndex(csvCache) {
-    const historyFiles = Object.keys(csvCache).filter(n =>
-        !n.toLowerCase().includes("phr") && n.endsWith(".csv")
-    ).sort((a,b) => {
-        const months = ["january","february","march","april","may","june","july","august","september","october","november","december"];
-        try {
-            const pA = a.split(/[_-]/); const pB = b.split(/[_-]/);
-            const dateB = new Date(pB[1], months.indexOf(pB[0].toLowerCase()));
-            const dateA = new Date(pA[1], months.indexOf(pA[0].toLowerCase()));
-            return dateB - dateA;
-        } catch(e) { return 0; }
-    });
+    const months = ["january","february","march","april","may","june","july","august","september","october","november","december"];
+    const getT = (s) => {
+        const clean = s.toLowerCase().replace(".csv", "");
+        const parts = clean.split(/[_-]/);
+        const month = months.indexOf(parts[0]);
+        const year = parseInt(parts[1]);
+        if (isNaN(year) || month === -1) return 0;
+        return new Date(year, month).getTime();
+    };
 
-    const natKey = Object.keys(csvCache).find(k => k.toLowerCase().includes("phr") && k.toLowerCase().endsWith(".csv"));
+    const historyFiles = Object.keys(csvCache).filter(n =>
+        n.toLowerCase().endsWith(".csv") &&
+        !n.toLowerCase().includes("phr") &&
+        !n.toLowerCase().includes("national")
+    ).sort((a,b) => getT(b) - getT(a));
+
+    const natKey = Object.keys(csvCache).find(k => k.toLowerCase().includes("phr") || k.toLowerCase().includes("national"));
 
     const playerMap = new Map();
     const historyMap = new Map();
@@ -272,15 +276,15 @@ async function processDataForIndex(csvCache) {
             const key = (id && id !== "0") ? id : (lnN + "|" + fnN);
 
             if (!playerMap.has(key)) {
-                playerMap.set(key, { ln, fn: fnP, id, nLN: lnN, nFN: fnN, isH: true });
+                playerMap.set(key, { ln: ln || "", fn: fnP || "", id: id || "", nLN: lnN || "", nFN: fnN || "", isH: true });
             } else {
                 const existing = playerMap.get(key);
-                if (!existing.ln) existing.ln = ln;
-                if (!existing.fn) existing.fn = fnP;
+                if (!existing.ln && ln) existing.ln = ln;
+                if (!existing.fn && fnP) existing.fn = fnP;
             }
 
             if (!historyMap.has(key)) historyMap.set(key, []);
-            historyMap.get(key).push({ d: fn.replace(".csv",""), r: helper.getRTG(p), type: "CMP", t: helper.getTitle(p) });
+            historyMap.get(key).push({ d: fn.replace(".csv","").replace("_"," "), r: helper.getRTG(p), type: "CMP", t: helper.getTitle(p) });
             if (!priorityRatingMap.has(key)) {
                 priorityRatingMap.set(key, { r: helper.getRTG(p), type: "CMP", title: helper.getTitle(p) });
             }
@@ -302,19 +306,19 @@ async function processDataForIndex(csvCache) {
             const key = (id && id !== "0") ? id : (lnN + "|" + fnN);
 
             if (!playerMap.has(key)) {
-                playerMap.set(key, { ln, fn: fnP, id, nLN: lnN, nFN: fnN, isH: false });
+                playerMap.set(key, { ln: ln || "", fn: fnP || "", id: id || "", nLN: lnN || "", nFN: fnN || "", isH: false });
             } else {
                 const existing = playerMap.get(key);
-                if (!existing.ln) existing.ln = ln;
-                if (!existing.fn) existing.fn = fnP;
+                if (!existing.ln && ln) existing.ln = ln;
+                if (!existing.fn && fnP) existing.fn = fnP;
             }
 
             if (!historyMap.has(key)) historyMap.set(key, []);
-            if (!historyMap.get(key).some(h => h.type === "PHR")) {
-                historyMap.get(key).push({ d: "PHRatings", r: helper.getRTG(p), type: "PHR", t: helper.getTitle(p) });
+            if (!historyMap.get(key).some(h => h.type === "National")) {
+                historyMap.get(key).push({ d: "National Rating", r: helper.getRTG(p), type: "National", t: helper.getTitle(p) });
             }
             if (!priorityRatingMap.has(key)) {
-                priorityRatingMap.set(key, { r: helper.getRTG(p), type: "PHR", title: helper.getTitle(p) });
+                priorityRatingMap.set(key, { r: helper.getRTG(p), type: "National", title: helper.getTitle(p) });
             }
             i++;
             if (i % 2000 === 0) {
