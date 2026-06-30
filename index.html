@@ -3,647 +3,195 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Chessmates Philippines Ratings</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>Chessmates PH - Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
     :root {
-        --bg-deep: #000000;
-        --bg-card: #111111;
-        --text-main: #FFFFFF;
-        --text-muted: #94A3B8;
-        --orange: #FFA500;
-        --orange-hover: #E69500;
-        --border: #222222;
+        --md-sys-color-surface: #FEF7FF;
+        --md-sys-color-on-surface: #1D1B20;
+        --md-sys-color-surface-container: #F3EDF7;
+        --md-sys-color-primary: #6750A4;
+        --md-sys-color-on-primary: #FFFFFF;
+        --md-sys-color-secondary-container: #E8DEF8;
+        --md-sys-color-on-secondary-container: #1D192B;
+        --md-sys-color-outline-variant: #CAC4D0;
     }
 
-    *, *::before, *::after {
-        box-sizing: border-box;
-        -webkit-tap-highlight-color: transparent;
-    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     body {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         margin: 0;
-        background-color: #000000;
-        background-image:
-            linear-gradient(45deg, #080808 25%, transparent 25%, transparent 75%, #080808 75%, #080808),
-            linear-gradient(45deg, #080808 25%, transparent 25%, transparent 75%, #080808 75%, #080808);
-        background-size: 60px 60px;
-        background-position: 0 0, 30px 30px;
-        background-attachment: fixed;
-        color: var(--text-main);
+        background-color: var(--md-sys-color-surface);
+        color: var(--md-sys-color-on-surface);
+        font-family: 'Roboto', sans-serif;
         min-height: 100vh;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        user-select: none;
-        -webkit-user-select: none;
     }
 
-    header {
-        background: rgba(30, 41, 59, 0.8);
-        backdrop-filter: blur(8px);
-        border-bottom: 1px solid var(--border);
-        padding: 12px 16px;
-        padding-top: calc(12px + env(safe-area-inset-top));
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .app-bar {
+        height: 64px;
+        background: var(--md-sys-color-surface);
         position: sticky;
         top: 0;
-        z-index: 100;
-        width: 100%;
-    }
-
-    .header-content {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 16px;
-        width: 100%;
-        max-width: 800px;
-        transition: max-width 0.3s ease;
+        z-index: 10;
     }
 
     .container {
-        flex: 1 0 auto;
-        padding: 20px 16px;
-        padding-top: calc(20px + env(safe-area-inset-top));
-        max-width: 480px;
+        padding: 16px;
+        padding-bottom: 140px; /* Fixed space for footer */
+        max-width: 600px;
+        margin: 0 auto;
         width: 100%;
+    }
+
+    .hero-section {
         display: flex;
         flex-direction: column;
         align-items: center;
-        transition: max-width 0.3s ease;
+        margin-bottom: 48px;
+        margin-top: 32px;
     }
 
     .hero-logo {
-        max-width: 250px;
-        width: 100%;
-        margin: 0 auto 24px auto;
+        width: 220px;
+        height: auto;
         display: block;
-        filter: drop-shadow(0 0 10px rgba(255, 165, 0, 0.2));
-    }
-
-    .hero-title {
-        font-size: 32px;
-        font-weight: 800;
-        color: var(--orange);
-        margin: 0 auto 8px auto;
-        letter-spacing: -0.02em;
-        line-height: 1.2;
-        text-align: center;
-        width: 100%;
-    }
-
-    .hero-subtitle {
-        color: var(--text-muted);
-        font-size: 16px;
-        margin: 0 auto 32px auto;
-        line-height: 1.5;
-        text-align: center;
-        width: 100%;
-    }
-
-    .search-container {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        max-width: 600px;
         margin: 0 auto;
-        position: relative;
-        width: 100%;
+        /* Darker professional overlay tint */
+        filter: brightness(0.4) contrast(1.2) drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+        transition: transform 0.3s ease;
     }
 
-    .search-input-wrapper {
-        position: relative;
-        width: 100%;
+    .menu-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
     }
-
-    .search-icon {
-        position: absolute;
-        left: 14px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--text-muted);
-    }
-
-    input {
-        width: 100%;
-        padding: 16px 16px 16px 44px;
-        font-size: 16px;
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        color: white;
-        outline: none;
-        transition: 0.2s;
-        -webkit-appearance: none;
-    }
-
-    input:focus {
-        border-color: var(--orange);
-        box-shadow: 0 0 0 3px rgba(255, 165, 0, 0.1);
-    }
-
-    .results {
-        margin-top: 12px;
-        text-align: left;
-        max-width: 600px;
-        margin-left: auto;
-        margin-right: auto;
-        background: var(--bg-card);
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        max-height: 300px;
-        overflow-y: auto;
-        display: none;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-    }
-
-    .result-item {
-        padding: 16px;
-        border-bottom: 1px solid var(--border);
-        cursor: pointer;
-        font-size: 16px;
-        text-align: left;
-    }
-
-    #mainView, #profile { width: 100%; }
-    .profile { display: none; text-align: center; }
-
-    .profile-header {
-        margin-bottom: 24px;
-        border-bottom: 1px solid var(--border);
-        padding-bottom: 16px;
-        display: flex;
-        justify-content: center;
-    }
-
-    .profile-name { font-size: 28px; font-weight: 800; margin: 0; line-height: 1.2; text-align: center; }
-    .profile-title { color: var(--orange); }
-    .profile-rating { color: var(--orange); font-size: 20px; font-weight: 700; margin-top: 8px; text-align: center; }
 
     .card {
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 20px;
-        margin-top: 16px;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        background-color: var(--md-sys-color-surface-container);
+        border-radius: 20px;
+        padding: 24px 16px;
         display: flex;
+        flex-direction: column;
+        align-items: center;
         justify-content: center;
-    }
-
-    .history-table { width: 100%; border-collapse: collapse; min-width: 280px; }
-    .history-table th { text-align: center; color: var(--text-muted); font-size: 12px; text-transform: uppercase; padding-bottom: 12px; letter-spacing: 0.05em; }
-    .history-table td { padding: 14px 0; border-top: 1px solid var(--border); font-size: 15px; text-align: center; }
-
-    .change-up { color: #4ADE80; font-weight: 700; }
-    .change-down { color: #F87171; font-weight: 700; }
-
-    .tournament-btn {
-        display: inline-block;
-        margin: 0 auto 20px auto;
-        padding: 6px 12px;
-        background: rgba(255, 165, 0, 0.1);
-        border: 1px solid var(--orange);
-        color: var(--orange);
         text-decoration: none;
-        border-radius: 999px;
-        font-weight: 700;
-        font-size: 12px;
-        transition: 0.3s;
-        cursor: pointer;
+        color: var(--md-sys-color-on-surface);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid var(--md-sys-color-outline-variant);
+        position: relative;
+        overflow: hidden;
     }
 
-    footer { padding: 20px 20px 40px 20px; text-align: center; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 13px; }
-
-    @media (min-width: 768px) {
-        .container { max-width: 800px; }
-        .hero-title { font-size: 48px; }
-        .hero-subtitle { font-size: 18px; }
+    /* Chess Checkered Motif Overlay */
+    .card::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-image:
+            linear-gradient(45deg, rgba(103, 80, 164, 0.02) 25%, transparent 25%, transparent 75%, rgba(103, 80, 164, 0.02) 75%),
+            linear-gradient(45deg, rgba(103, 80, 164, 0.02) 25%, transparent 25%, transparent 75%, rgba(103, 80, 164, 0.02) 75%);
+        background-size: 20px 20px;
+        background-position: 0 0, 10px 10px;
+        pointer-events: none;
     }
+
+    .card:active {
+        transform: scale(0.96);
+        background-color: var(--md-sys-color-secondary-container);
+        border-color: var(--md-sys-color-primary);
+    }
+
+    .card.wide {
+        grid-column: span 2;
+        flex-direction: row;
+        justify-content: flex-start;
+        padding: 24px;
+        gap: 20px;
+        background-color: var(--md-sys-color-surface);
+        border: 2.5px solid var(--md-sys-color-primary);
+    }
+
+    .icon-container {
+        width: 48px; height: 48px; background: white; border-radius: 16px;
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        color: var(--md-sys-color-primary); flex-shrink: 0;
+    }
+    .wide .icon-container { margin-bottom: 0; }
+    .icon-container svg { width: 24px; height: 24px; fill: currentColor; }
+
+    .card-text { font-weight: 700; font-size: 14px; text-align: center; line-height: 1.2; }
+    .wide .card-text { text-align: left; font-size: 16px; }
+
+    .coord { position: absolute; top: 8px; right: 12px; font-size: 10px; font-weight: 900; opacity: 0.1; font-family: monospace; }
+
+    footer {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: var(--md-sys-color-surface);
+        padding: 16px;
+        text-align: center;
+        border-top: 1px solid var(--md-sys-color-outline-variant);
+        z-index: 100;
+    }
+
+    .footer-content { display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--md-sys-color-on-surface); opacity: 0.8; }
 </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
+
+<div class="app-bar"></div>
 
 <div class="container">
-    <div id="mainView">
-        <img src="images/logo/CMPR_Logo.png" class="hero-logo" alt="Main Logo">
-        <h1 class="hero-title">Chessmates <br> Philippine Rating</h1>
-        <p class="hero-subtitle">Track rating movements for CMP Club</p>
-
-        <div class="search-container">
-            <div class="search-input-wrapper">
-                <div class="search-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="16.65" y1="16.65" x2="21" y2="21"/></svg>
-                </div>
-                <input type="text" id="searchBox" placeholder="LastName, FirstName..." autocomplete="off">
-            </div>
-        </div>
-        <div class="results" id="results"></div>
+    <div class="hero-section">
+        <img src="images/logo/CMPR_Logo.png" class="hero-logo" alt="Logo">
     </div>
 
-    <div class="profile" id="profile">
-        <img src="images/logo/CMPR_Logo.png" class="hero-logo" onclick="goBack()" style="cursor: pointer; max-width: 120px; margin-bottom: 20px;" alt="Logo">
-        <div class="profile-header">
-            <div>
-                <h2 id="playerName" class="profile-name"></h2>
-                <div id="playerRating" class="profile-rating"></div>
-            </div>
-        </div>
-        <h3 id="historyTitle" style="margin: 0; font-size: 18px;">Chessmates Philippine Rating History</h3>
-        <div class="card" id="historyCard">
-            <table class="history-table">
-                <thead><tr><th>Date</th><th>Rating</th><th class="change-col">+/-</th></tr></thead>
-                <tbody id="ratingHistoryBody"></tbody>
-            </table>
-        </div>
-        <div class="card" id="chartCard">
-            <canvas id="ratingChart" style="max-height: 200px;"></canvas>
-        </div>
+    <div class="menu-grid">
+        <a href="cmprating.html" class="card wide">
+            <span class="coord">e4</span>
+            <div class="icon-container"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></div>
+            <div class="card-text">Ratings Search</div>
+        </a>
+        <a href="ThaiRank.html" class="card">
+            <span class="coord">d5</span>
+            <div class="icon-container"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div>
+            <div class="card-text">Team Ranking for Thailand</div>
+        </a>
+        <a href="ThaiRankIndiv.html" class="card">
+            <span class="coord">f6</span>
+            <div class="icon-container"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+            <div class="card-text">Individual Ranking for Thailand</div>
+        </a>
+        <a href="cmptournaments.html" class="card">
+            <span class="coord">c3</span>
+            <div class="icon-container"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg></div>
+            <div class="card-text">Tournaments</div>
+        </a>
+        <a href="about.html" class="card">
+            <span class="coord">g2</span>
+            <div class="icon-container"><svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg></div>
+            <div class="card-text">About App</div>
+        </a>
     </div>
 </div>
 
 <footer>
-    <div style="margin-bottom: 20px;">
-        <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 10px; flex-wrap: wrap;">
-            <a href="cmptournaments.html" class="tournament-btn" style="margin: 0;">Tournament Rated</a>
-            <a href="ThaiRank.html" class="tournament-btn" style="margin: 0;">Thailand Ranking</a>
-        </div>
-        <a href="about.html" class="tournament-btn" style="background: rgba(255,255,255,0.05); border-color: #444; color: #eee;">About App</a>
+    <div class="footer-content">
+        <div style="font-weight: 700;">♞ Chessmates Philippines</div>
+        <div id="appVersion">Version 1.0.1</div>
+        <div style="margin-top: 4px; font-weight: 500;">Powered by Chess Lounge</div>
     </div>
-    © 2026 All rights reserved <br> Powered by The Lounge & Chess Lounge
 </footer>
 
 <script>
-document.addEventListener('contextmenu', e => e.preventDefault());
-
-let masterIndex = [];
-let fullCache = {};
-let historyFiles = [];
-
-const DB_NAME = "RatingDB";
-const STORE_NAME = "cache";
-
-function getFromDB(key) {
-    return new Promise((resolve, reject) => {
-        // Must match version in splash.html
-        const request = indexedDB.open(DB_NAME, 2);
-        request.onsuccess = (e) => {
-            const db = e.target.result;
-            if (!db.objectStoreNames.contains(STORE_NAME)) { resolve(null); return; }
-            const tx = db.transaction(STORE_NAME, "readonly");
-            const req = tx.objectStore(STORE_NAME).get(key);
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = () => reject(req.error);
-        };
-        request.onerror = () => reject(request.error);
-    });
-}
-
-function processFile(fileData) {
-    if (!fileData || !fileData.h || !fileData.r) return [];
-    return fileData.r.map(row => {
-        const obj = {};
-        fileData.h.forEach((h, i) => { obj[h] = row[i] || ""; });
-        return obj;
-    });
-}
-
-async function init() {
-    try {
-        const cache = await getFromDB("rating_cache");
-
-        if (!cache) {
-            window.location.replace('splash.html');
-            return;
-        }
-
-        fullCache = cache;
-
-        historyFiles = Object.keys(fullCache)
-            .filter(name => name !== "PHRapid.csv")
-            .sort((a, b) => {
-                try {
-                    const partsA = a.replace(".csv", "").split(/[_-]/);
-                    const partsB = b.replace(".csv", "").split(/[_-]/);
-                    return new Date(partsB[0] + " 1, " + partsB[1]) - new Date(partsA[0] + " 1, " + partsA[1]);
-                } catch(e) { return 0; }
-            });
-
-        let playerMap = new Map();
-        let seenPlayers = new Set(); // For O(1) deduplication
-
-        // 1. CMP Months (Priority - Latest to Oldest)
-        historyFiles.forEach(fn => {
-            processFile(fullCache[fn]).forEach(p => {
-                const ln = getLN(p);
-                const fnP = getFN(p);
-                if (!ln) return;
-
-                const normName = normalize(ln) + "|" + normalize(fnP);
-                const id = getID(p);
-                const compositeKey = (id ? id + "|" : "") + normName;
-
-                // If we haven't seen this specific ID+Name combination yet
-                if (!seenPlayers.has(compositeKey)) {
-                    playerMap.set(compositeKey, p);
-                    seenPlayers.add(compositeKey);
-                    // Also track ID and Name separately for simpler lookups if needed
-                    if (id) seenPlayers.add(id);
-                    seenPlayers.add(normName);
-                }
-            });
-        });
-
-        // 2. PHRapid Fallback (Only if not in any CMP history)
-        if (fullCache["PHRapid.csv"]) {
-            processFile(fullCache["PHRapid.csv"]).forEach(p => {
-                const ln = getLN(p);
-                const fnP = getFN(p);
-                if (!ln) return;
-
-                const normName = normalize(ln) + "|" + normalize(fnP);
-                const id = getID(p);
-                const compositeKey = (id ? id + "|" : "") + normName;
-
-                // Only add if this player has NO record in CMP history
-                if (!seenPlayers.has(compositeKey) && !seenPlayers.has(normName) && (!id || !seenPlayers.has(id))) {
-                    playerMap.set(compositeKey, p);
-                }
-            });
-        }
-
-        masterIndex = Array.from(playerMap.values());
-
-    } catch (e) {
-        console.error("Init Error:", e);
+    if (window.AndroidApp && window.AndroidApp.getAppVersion) {
+        document.getElementById("appVersion").innerText = "Version " + window.AndroidApp.getAppVersion();
     }
-}
-
-function getVal(p, key) {
-    if (!p) return "";
-    const ck = key.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const ak = Object.keys(p).find(o => o.toLowerCase().replace(/[^a-z0-9]/g, '') === ck);
-    return ak ? (p[ak] || "").toString().trim() : "";
-}
-
-function getLN(p) {
-    let ln = getVal(p, "LastName");
-    if (!ln) {
-        const full = getVal(p, "Name");
-        if (full.includes(",")) {
-            ln = full.split(",")[0].trim();
-        } else {
-            const parts = full.trim().split(/\s+/);
-            ln = parts[parts.length - 1] || "";
-        }
-    }
-    return ln;
-}
-function getFN(p) {
-    let fn = getVal(p, "FirstName");
-    if (!fn) {
-        const full = getVal(p, "Name");
-        if (full.includes(",")) {
-            fn = full.split(",")[1].trim();
-        } else {
-            const parts = full.trim().split(/\s+/);
-            fn = parts.slice(0, parts.length - 1).join(" ");
-        }
-    }
-    return fn;
-}
-function getID(p) { return getVal(p, "IDNo") || getVal(p, "ID") || getVal(p, "No"); }
-function getRTG(p) { return getVal(p, "RtgNat") || "0"; }
-function getTitle(p) { return getVal(p, "TITLE"); }
-
-function normalize(s) {
-    return (s || "").toLowerCase()
-        .replace(/jr\.?$/, "jr")
-        .replace(/\s[a-z]\.?\s/g, " ") // Remove middle initials like " M. " or " M "
-        .replace(/\s[a-z]\.?$/g, "")   // Remove trailing middle initials like " M."
-        .replace(/[^a-z0-9]/g, "");    // Remove all non-alphanumeric
-}
-
-function isSamePlayer(p1, p2) {
-    const id1 = getID(p1); const id2 = getID(p2);
-    const ln1 = normalize(getLN(p1)); const ln2 = normalize(getLN(p2));
-
-    // If IDs match, we STILL check if last names match to avoid ID collisions
-    if (id1 && id2 && id1 === id2) {
-        return ln1 === ln2;
-    }
-
-    // Compare normalized names
-    const fn1 = normalize(getFN(p1)); const fn2 = normalize(getFN(p2));
-
-    if (ln1 && ln1 === ln2 && fn1 && fn1 === fn2) return true;
-
-    // Fallback: check if one first name is a prefix of the other (handles "Ervil" vs "Ervil M.")
-    if (ln1 && ln1 === ln2) {
-        if (fn1.startsWith(fn2) || fn2.startsWith(fn1)) return true;
-    }
-    return false;
-}
-
-document.getElementById("searchBox").addEventListener("input", function() {
-    performSearch(this.value.toLowerCase().trim());
-});
-
-function performSearch(query) {
-    const container = document.getElementById("results");
-    if (query.length < 2) { container.style.display = "none"; return; }
-
-    const hasComma = query.includes(",");
-    const parts = query.split(",").map(p => p.trim());
-    const lnQ = parts[0] || "";
-    const fnQ = parts[1] || "";
-
-    const results = masterIndex.filter(p => {
-        const ln = getLN(p);
-        const fn = getFN(p);
-
-        const nLN = normalize(ln);
-        const nFN = normalize(fn);
-
-        if (hasComma) {
-            const matchLN = (q, val, nVal) => {
-                if (!q) return true;
-                const nQ = normalize(q);
-                // STRICT matching for last name when comma is used
-                return nVal === nQ;
-            };
-            const matchFN = (q, val, nVal) => {
-                if (!q) return true;
-                if (q.includes("*")) return val.toLowerCase().includes(q.replace(/\*/g, ""));
-                const nQ = normalize(q);
-                return val.toLowerCase().startsWith(q) || nVal.startsWith(nQ);
-            };
-            return matchLN(lnQ, ln, nLN) && matchFN(fnQ, fn, nFN);
-        } else {
-            if (query.includes("*")) {
-                const cq = query.replace(/\*/g, "");
-                return ln.toLowerCase().includes(cq) || fn.toLowerCase().includes(cq);
-            }
-            return nLN.startsWith(normalize(query));
-        }
-    });
-
-    // Sort results: 1. Exact matches first, 2. Shorter matches, 3. Alphabetical
-    results.sort((a, b) => {
-        const lnA = getLN(a).toLowerCase();
-        const lnB = getLN(b).toLowerCase();
-        const fnA = getFN(a).toLowerCase();
-        const fnB = getFN(b).toLowerCase();
-
-        if (hasComma) {
-            // Priority 1: Exact Last Name match
-            const exactLNA = lnA === lnQ;
-            const exactLNB = lnB === lnQ;
-            if (exactLNA !== exactLNB) return exactLNA ? -1 : 1;
-
-            // Priority 2: Exact First Name match
-            const exactFNA = fnA === fnQ;
-            const exactFNB = fnB === fnQ;
-            if (exactFNA !== exactFNB) return exactFNA ? -1 : 1;
-        }
-
-        // Priority 3: Shorter total name length
-        const lenA = lnA.length + fnA.length;
-        const lenB = lnB.length + fnB.length;
-        if (lenA !== lenB) return lenA - lenB;
-
-        // Priority 4: Alphabetical
-        if (lnA !== lnB) return lnA.localeCompare(lnB);
-        return fnA.localeCompare(fnB);
-    });
-
-    if (results.length > 0) {
-        container.innerHTML = "";
-        container.style.display = "block";
-        results.slice(0, 30).forEach(p => {
-            const div = document.createElement("div");
-            div.className = "result-item";
-            div.innerText = `${getLN(p)}, ${getFN(p)}`;
-            div.onclick = () => showProfile(p);
-            container.appendChild(div);
-        });
-    } else {
-        container.innerHTML = "<div class='result-item'>No players found.</div>";
-        container.style.display = "block";
-    }
-}
-
-async function showProfile(p) {
-    history.pushState({ view: 'profile' }, '');
-    document.getElementById("mainView").style.display = "none";
-    document.getElementById("profile").style.display = "block";
-    document.getElementById("historyTitle").style.display = "none";
-    document.getElementById("historyCard").style.display = "none";
-    document.getElementById("chartCard").style.display = "none";
-
-    const title = getTitle(p);
-    const nameEl = document.getElementById("playerName");
-    nameEl.innerHTML = "";
-    if (title && title !== "0") {
-        const span = document.createElement("span"); span.className = "profile-title";
-        span.innerText = title + " "; nameEl.appendChild(span);
-    }
-    nameEl.appendChild(document.createTextNode(getFN(p) + " " + getLN(p)));
-
-    const playerHistory = [];
-    historyFiles.forEach(fn => {
-        const match = processFile(fullCache[fn]).find(x => isSamePlayer(x, p));
-        if (match) playerHistory.push({ date: fn.replace(".csv",""), rating: getRTG(match) });
-    });
-
-    const nat = processFile(fullCache["PHRapid.csv"]).find(x => isSamePlayer(x, p));
-    if (nat) {
-        const r = getRTG(nat);
-        if (r && r !== "0") playerHistory.push({ date: "National/Initial", rating: r });
-    }
-
-    if (playerHistory.length > 0) {
-        playerHistory.sort((a, b) => {
-            if (a.date === "National/Initial") return 1;
-            if (b.date === "National/Initial") return -1;
-            return new Date(b.date.replace("_", " ")) - new Date(a.date.replace("_", " "));
-        });
-
-        const hasCmp = playerHistory.some(h => h.date !== "National/Initial");
-        document.getElementById("playerRating").innerText = (hasCmp ? "CMP Rating: " : "National Rating: ") + playerHistory[0].rating;
-
-        if (hasCmp) {
-            document.getElementById("historyTitle").style.display = "block";
-            document.getElementById("historyCard").style.display = "flex";
-            document.getElementById("chartCard").style.display = "flex";
-            displayHistory(playerHistory);
-            drawChart(playerHistory);
-        }
-    }
-}
-
-function goBack() { history.back(); }
-window.onpopstate = () => {
-    document.getElementById("profile").style.display = "none";
-    document.getElementById("mainView").style.display = "block";
-    document.getElementById("searchBox").value = "";
-    document.getElementById("results").style.display = "none";
-    if (window.ratingChartInstance) window.ratingChartInstance.destroy();
-};
-
-function displayHistory(h) {
-    const b = document.getElementById("ratingHistoryBody"); b.innerHTML = "";
-    h.forEach((x, i) => {
-        const tr = document.createElement("tr");
-        const d = document.createElement("td"); d.innerText = x.date.replace("_", " ");
-        const r = document.createElement("td"); r.innerText = x.rating;
-        const c = document.createElement("td"); c.className = "change-col";
-        const n = h[i+1];
-        if (n) {
-            const diff = parseInt(x.rating) - parseInt(n.rating);
-            if (diff > 0) { c.innerText = "+" + diff; c.className += " change-up"; }
-            else if (diff < 0) { c.innerText = diff; c.className += " change-down"; }
-            else c.innerText = "0";
-        } else c.innerText = "-";
-        tr.append(d, r, c); b.append(tr);
-    });
-}
-
-function drawChart(h) {
-    const ctx = document.getElementById("ratingChart");
-    if (window.ratingChartInstance) window.ratingChartInstance.destroy();
-    const sorted = [...h].sort((a, b) => {
-        if (a.date === "National/Initial") return -1;
-        if (b.date === "National/Initial") return 1;
-        return new Date(a.date.replace("_", " ")) - new Date(b.date.replace("_", " "));
-    });
-    window.ratingChartInstance = new Chart(ctx, {
-        type: "line",
-        data: {
-            labels: sorted.map(x => x.date.replace("_"," ")),
-            datasets: [{
-                label: "Rating", data: sorted.map(x => x.rating),
-                borderColor: "#FFA500", backgroundColor: "rgba(255, 165, 0, 0.1)",
-                borderWidth: 2, pointRadius: 4, tension: 0.3, fill: true
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: { grid: { color: "#222" }, ticks: { color: "#94A3B8" } },
-                x: { grid: { display: false }, ticks: { color: "#94A3B8" } }
-            }
-        }
-    });
-}
-
-init();
+    document.addEventListener('contextmenu', e => e.preventDefault());
 </script>
 </body>
 </html>

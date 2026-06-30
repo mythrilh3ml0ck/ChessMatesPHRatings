@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Syncing Chessmates Ratings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --md-sys-color-surface: #FEF7FF;
+            --md-sys-color-on-surface: #1D1B20;
+            --md-sys-color-primary: #6750A4;
+            --md-sys-color-surface-container: #F3EDF7;
+        }
+
+        body, html {
+            height: 100%; margin: 0; padding: 0;
+            background-color: var(--md-sys-color-surface);
+            font-family: 'Roboto', sans-serif;
+            display: flex; justify-content: center; align-items: center; overflow: hidden;
+        }
+
+        .splash-container {
+            text-align: center;
+            animation: fadeIn 1.2s ease-in-out;
+            width: 100%;
+            padding: 24px;
+            padding-top: calc(24px + env(safe-area-inset-top));
+        }
+
+        .logo {
+            width: 220px;
+            height: auto;
+            margin-bottom: 40px;
+            filter: brightness(0.4) contrast(1.2) drop-shadow(0 12px 24px rgba(0,0,0,0.15));
+        }
+
+        .loader-bar {
+            width: 240px;
+            height: 6px;
+            background: var(--md-sys-color-surface-container);
+            border-radius: 10px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loader-progress {
+            width: 0%;
+            height: 100%;
+            background: var(--md-sys-color-primary);
+            border-radius: 10px;
+            transition: width 0.4s ease;
+        }
+
+        .loading-text {
+            color: var(--md-sys-color-on-surface);
+            font-size: 14px;
+            margin-top: 20px;
+            font-weight: 500;
+            min-height: 20px;
+            opacity: 0.8;
+        }
+
+        #versionText {
+            color: var(--md-sys-color-on-surface);
+            font-size: 12px;
+            margin-bottom: 24px;
+            font-weight: 700;
+            opacity: 0.5;
+        }
+
+        .error-btn {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: var(--md-sys-color-primary);
+            border: none;
+            border-radius: 100px;
+            color: white;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(103, 80, 164, 0.2);
+        }
+
+        .branding {
+            margin-top: 60px;
+            color: var(--md-sys-color-on-surface);
+            font-size: 11px;
+            font-weight: 700;
+            opacity: 0.6;
+            letter-spacing: 0.5px;
+            line-height: 1.5;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body>
+<div class="splash-container">
+    <img src="images/logo/CMPR_Logo.png" alt="Logo" class="logo">
+    <div id="versionText">Version 1.0.1</div>
+    <div class="loader-bar"><div id="progressBar" class="loader-progress"></div></div>
+    <div id="statusText" class="loading-text">Initializing sync...</div>
+
+    <div id="errorActions" style="display: none;">
+        <button onclick="sync()" class="error-btn">Retry Sync</button>
+    </div>
+
+    <div class="branding">
+        ♞ CHESSMATES PHILIPPINES<br>
+        <span style="font-weight: 500;">Powered by Chess Lounge</span>
+    </div>
+</div>
+
+<script>
+const historyAPI = "https://api.github.com/repos/mythrilh3ml0ck/ChessMatesPHRatings/contents/CMP/ratinghistory";
+const nationalAPI = "https://api.github.com/repos/mythrilh3ml0ck/ChessMatesPHRatings/contents/CMP/nationalrating";
+
+const DB_NAME = "RatingDB";
+const STORE_NAME = "cache";
+
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 3);
+        request.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME);
+            }
+        };
+        request.onsuccess = (e) => resolve(e.target.result);
+        request.onerror = (e) => reject(e.target.error);
+    });
+}
+
+function saveToDB(key, data) {
+    return openDB().then(db => {
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, "readwrite");
+            tx.objectStore(STORE_NAME).put(data, key);
+            tx.oncomplete = () => resolve();
+            tx.onerror = (e) => reject(e.target.error);
+        });
+    });
+}
+
+function updateUI(percent, text, isError = false) {
+    document.getElementById("progressBar").style.width = percent + "%";
+    const status = document.getElementById("statusText");
+    status.innerText = text;
+    status.style.color = isError ? "#B3261E" : "var(--md-sys-color-on-surface)";
+    document.getElementById("errorActions").style.display = isError ? "block" : "none";
+}
+
+function parseCSV(text) {
+    if (!text || !text.trim()) return { h: [], r: [] };
+    const cleanText = text.replace(/^\uFEFF/, '').trim();
+    const lines = cleanText.split(/\r?\n/).filter(l => l.trim().length > 0);
+    if (lines.length === 0) return { h: [], r: [] };
+
+    const firstLine = lines[0];
+    const commaCount = (firstLine.match(/,/g) || []).length;
+    const semiCount = (firstLine.match(/;/g) || []).length;
+    const tabCount = (firstLine.match(/\t/g) || []).length;
+    let delimiter = ',';
+    if (semiCount > commaCount) delimiter = ';';
+    if (tabCount > commaCount && tabCount > semiCount) delimiter = '\t';
+
+    const splitLine = (line) => {
+        const values = []; let cur = ''; let inside = false;
+        for (let i = 0; i < line.length; i++) {
+            if (line[i] === '"') inside = !inside;
+            else if (line[i] === delimiter && !inside) { values.push(cur.trim()); cur = ''; }
+            else cur += line[i];
+        }
+        values.push(cur.trim());
+        return values.map(v => v.replace(/^"|"$/g, '').trim());
+    };
+
+    const firstLineValues = splitLine(lines[0]);
+    const headerKeywords = ["lastname", "firstname", "rtgnat", "rtg_nat", "title", "sex", "idno", "name", "player", "surname", "rating", "rtg", "id", "full name", "fullname", "member"];
+    const isHeader = firstLineValues.some(v => headerKeywords.includes(v.toLowerCase().replace(/[^a-z]/g, '')));
+
+    let headers = firstLineValues;
+    if (!isHeader) {
+        headers = ["TITLE", "LastName", "FirstName", "SEX", "Rtg_Nat", "ID", "Name", "Rating"];
+        for(let i=8; i<20; i++) headers.push("COL" + i);
+    }
+    let rows = lines.slice(isHeader ? 1 : 0).map(splitLine);
+    return { h: headers, r: rows };
+}
+
+function finalizeSync(processedData) {
+    localStorage.setItem("has_synced", "true");
+    localStorage.setItem("last_sync_time", Date.now().toString());
+    updateUI(98, "Saving to database...");
+
+    saveToDB("master_index", processedData).then(() => {
+        updateUI(100, "Database ready!");
+        setTimeout(() => { window.location.replace('index.html'); }, 500);
+    }).catch(err => {
+        console.error("Save Error:", err);
+        updateUI(100, "Ready!");
+        setTimeout(() => { window.location.replace('index.html'); }, 500);
+    });
+}
+
+const helper = {
+    process: (fileData) => {
+        if (!fileData || !fileData.h || !fileData.r) return [];
+        const headers = fileData.h.map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+        return fileData.r.map(row => {
+            const obj = {};
+            headers.forEach((h, i) => {
+                const val = (row[i] || "").toString().trim();
+                if (val) obj[h] = val;
+            });
+            return obj;
+        });
+    },
+    normalize: (s) => (s || "").toString().toLowerCase().replace(/[^a-z0-9]/g, ""),
+    getLN: (p) => {
+        const nameCol = p.name || "";
+        if (nameCol.includes(",")) return nameCol.split(",")[0].trim();
+        const lnCol = p.lastname || p.surname || "";
+        if (lnCol) return lnCol;
+        if (p.firstname || p.givenname) return nameCol;
+        return nameCol;
+    },
+    getFN: (p) => {
+        const fnCol = p.firstname || p.givenname || "";
+        if (fnCol) return fnCol;
+        const nameCol = p.name || "";
+        if (nameCol.includes(",")) return nameCol.split(",")[1].trim();
+        return "";
+    },
+    getID: (p) => p.idno || p.id || p.no || p.id_no || "",
+    getRTG: (p) => p.rtgnat || p.rtg_nat || p.rating || "0",
+    getTitle: (p) => p.title || ""
+};
+
+async function processDataForIndex(csvCache) {
+    const historyFiles = Object.keys(csvCache).filter(n =>
+        !n.toLowerCase().includes("phr") && n.endsWith(".csv")
+    ).sort((a,b) => {
+        const months = ["january","february","march","april","may","june","july","august","september","october","november","december"];
+        try {
+            const pA = a.split(/[_-]/); const pB = b.split(/[_-]/);
+            const dateB = new Date(pB[1], months.indexOf(pB[0].toLowerCase()));
+            const dateA = new Date(pA[1], months.indexOf(pA[0].toLowerCase()));
+            return dateB - dateA;
+        } catch(e) { return 0; }
+    });
+
+    const natKey = Object.keys(csvCache).find(k => k.toLowerCase().includes("phr") && k.toLowerCase().endsWith(".csv"));
+
+    const playerMap = new Map();
+    const historyMap = new Map();
+    const priorityRatingMap = new Map();
+
+    updateUI(96, "Indexing history...");
+    for (const fn of historyFiles) {
+        const players = helper.process(csvCache[fn]);
+        for (const p of players) {
+            const ln = helper.getLN(p);
+            const fnP = helper.getFN(p);
+            if (!ln && !fnP) continue;
+            const lnN = helper.normalize(ln);
+            const fnN = helper.normalize(fnP);
+            const id = helper.getID(p);
+            const key = (id && id !== "0") ? id : (lnN + "|" + fnN);
+
+            if (!playerMap.has(key)) {
+                playerMap.set(key, { ln, fn: fnP, id, nLN: lnN, nFN: fnN, isH: true });
+            } else {
+                const existing = playerMap.get(key);
+                if (!existing.ln) existing.ln = ln;
+                if (!existing.fn) existing.fn = fnP;
+            }
+
+            if (!historyMap.has(key)) historyMap.set(key, []);
+            historyMap.get(key).push({ d: fn.replace(".csv",""), r: helper.getRTG(p), type: "CMP", t: helper.getTitle(p) });
+            if (!priorityRatingMap.has(key)) {
+                priorityRatingMap.set(key, { r: helper.getRTG(p), type: "CMP", title: helper.getTitle(p) });
+            }
+        }
+        await new Promise(r => setTimeout(r, 1));
+    }
+
+    if (natKey) {
+        updateUI(97, "Indexing national rating...");
+        const nationalPlayers = helper.process(csvCache[natKey]);
+        let i = 0;
+        for (const p of nationalPlayers) {
+            const ln = helper.getLN(p);
+            const fnP = helper.getFN(p);
+            if (!ln && !fnP) continue;
+            const lnN = helper.normalize(ln);
+            const fnN = helper.normalize(fnP);
+            const id = helper.getID(p);
+            const key = (id && id !== "0") ? id : (lnN + "|" + fnN);
+
+            if (!playerMap.has(key)) {
+                playerMap.set(key, { ln, fn: fnP, id, nLN: lnN, nFN: fnN, isH: false });
+            } else {
+                const existing = playerMap.get(key);
+                if (!existing.ln) existing.ln = ln;
+                if (!existing.fn) existing.fn = fnP;
+            }
+
+            if (!historyMap.has(key)) historyMap.set(key, []);
+            if (!historyMap.get(key).some(h => h.type === "PHR")) {
+                historyMap.get(key).push({ d: "PHRatings", r: helper.getRTG(p), type: "PHR", t: helper.getTitle(p) });
+            }
+            if (!priorityRatingMap.has(key)) {
+                priorityRatingMap.set(key, { r: helper.getRTG(p), type: "PHR", title: helper.getTitle(p) });
+            }
+            i++;
+            if (i % 2000 === 0) {
+                updateUI(97, `Indexing national rating (${Math.round(i/nationalPlayers.length*100)}%)...`);
+                await new Promise(r => setTimeout(r, 1));
+            }
+        }
+    }
+
+    updateUI(98, "Building final index...");
+    const final = [];
+    playerMap.forEach((p, key) => {
+        const pr = priorityRatingMap.get(key) || { r: "0", type: "NONE", title: "" };
+        final.push({
+            ln: p.ln, fn: p.fn, id: p.id,
+            nLN: p.nLN, nFN: p.nFN,
+            prR: pr.r, prT: pr.type, prTitle: pr.title,
+            isH: p.isH,
+            hist: historyMap.get(key) || []
+        });
+    });
+    return final;
+}
+
+function enterApp() {
+    window.location.replace('index.html');
+}
+
+async function sync() {
+    try {
+        if (window.AndroidApp && window.AndroidApp.getAppVersion) {
+            document.getElementById("versionText").innerText = "Version " + window.AndroidApp.getAppVersion();
+        }
+
+        updateUI(5, "Connecting to Chessmates Server...");
+
+        const csvCache = {};
+        const getJSON = async (url) => {
+            const res = await fetch(url + "?t=" + Date.now());
+            if (!res.ok) throw new Error("API failed");
+            return res.json();
+        };
+
+        try {
+            const data = await getJSON(historyAPI);
+            const monthlyFiles = data.filter(f => f.name.toLowerCase().endsWith(".csv"));
+            let loaded = 0;
+            for (const file of monthlyFiles) {
+                try {
+                    const res = await fetch(file.download_url);
+                    if (res.ok) {
+                        const text = await res.text();
+                        csvCache[file.name] = parseCSV(text);
+                    }
+                } catch (e) {}
+                loaded++;
+                updateUI(10 + (loaded / monthlyFiles.length * 60), `Syncing ${file.name.split('_')[0]}...`);
+            }
+        } catch (e) { console.error(e); }
+
+        try {
+            updateUI(80, "Updating National Database...");
+            const nData = await getJSON(nationalAPI);
+            const natFile = nData.find(f => f.name.toLowerCase() === "phrapid.csv") ||
+                           nData.find(f => f.name.toLowerCase() === "phratings.csv") ||
+                           nData.find(f => f.name.toLowerCase().endsWith(".csv"));
+            if (natFile) {
+                const rRes = await fetch(natFile.download_url);
+                if (rRes.ok) {
+                    csvCache["PHRapid.csv"] = parseCSV(await rRes.text());
+                    updateUI(90, "National data updated!");
+                }
+            }
+        } catch (e) { console.error(e); }
+
+        if (Object.keys(csvCache).length === 0) throw new Error("No data.");
+        updateUI(95, "Optimizing Local Storage...");
+        await saveToDB("rating_cache", csvCache);
+        const processed = await processDataForIndex(csvCache);
+        finalizeSync(processed);
+    } catch (e) {
+        updateUI(50, "Sync Error", true);
+        if (localStorage.getItem("has_synced") === "true") enterApp();
+    }
+}
+document.addEventListener('DOMContentLoaded', sync);
+</script>
+</body>
+</html>

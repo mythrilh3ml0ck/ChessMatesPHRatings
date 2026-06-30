@@ -1,279 +1,287 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>About - Chessmates PH</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --md-sys-color-surface: #FEF7FF;
+        --md-sys-color-on-surface: #1D1B20;
+        --md-sys-color-surface-container: #F3EDF7;
+        --md-sys-color-primary: #6750A4;
+        --md-sys-color-on-primary: #FFFFFF;
+        --md-sys-color-secondary-container: #E8DEF8;
+        --md-sys-color-on-secondary-container: #1D192B;
+        --md-sys-color-outline-variant: #CAC4D0;
+    }
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+        font-family: 'Roboto', sans-serif;
+        margin: 0;
+        background-color: var(--md-sys-color-surface);
+        color: var(--md-sys-color-on-surface);
+        line-height: 1.5;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
 
-    <title>About Chess Lounge Lite</title>
+    .app-bar {
+        height: 64px;
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        position: sticky;
+        top: 0;
+        background: var(--md-sys-color-surface);
+        z-index: 100;
+    }
+    .back-btn {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        color: inherit;
+        border-radius: 50%;
+    }
+    .back-btn:active { background: rgba(0,0,0,0.05); }
 
-    <style>
+    .container {
+        padding: 16px;
+        padding-bottom: 140px;
+        max-width: 600px;
+        margin: 0 auto;
+        width: 100%;
+    }
 
-        :root{
-        --bg-color:#000000;
-        --text-color:white;
-        --card-bg:#111111;
-        --card-border:#222222;
-        --highlight:#FFA500;
-        --footer-bg:#000000;
-        }
+    /* Hero Section synced with index.html */
+    .hero-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 48px;
+        margin-top: 32px;
+    }
 
-        /* GLOBAL */
+    .hero-logo {
+        width: 220px;
+        height: auto;
+        display: block;
+        /* Darker professional overlay tint from index.html */
+        filter: brightness(0.4) contrast(1.2) drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+        transition: transform 0.3s ease;
+    }
 
-        html,body{
-        height:100%;
-        width:100%;
-        margin:0;
-        padding:0;
-        overflow-x:hidden;
-        box-sizing:border-box;
-        }
+    .version-tag {
+        display: inline-block;
+        padding: 4px 12px;
+        background: var(--md-sys-color-surface-container);
+        border-radius: 100px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--md-sys-color-primary);
+        margin-top: 16px;
+    }
 
-        *,*::before,*::after{
-        box-sizing:border-box;
-        }
+    /* Content Sections */
+    .section-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--md-sys-color-primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin: 32px 0 16px 8px;
+    }
 
-        body{
-        font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
-        background-color: #000000;
-        background-image:
-            linear-gradient(45deg, #080808 25%, transparent 25%, transparent 75%, #080808 75%, #080808),
-            linear-gradient(45deg, #080808 25%, transparent 25%, transparent 75%, #080808 75%, #080808);
-        background-size: 60px 60px;
-        background-position: 0 0, 30px 30px;
-        background-attachment: fixed;
-        color:var(--text-color);
-        display:flex;
-        flex-direction:column;
-        min-height:100vh;
-        }
+    .card {
+        background: white;
+        border-radius: 24px;
+        padding: 20px;
+        margin-bottom: 16px;
+        border: 1px solid var(--md-sys-color-outline-variant);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
 
-        /* APP SHELL */
+    .feature-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    .feature-item:last-child { margin-bottom: 0; }
+    .icon-box {
+        width: 40px;
+        height: 40px;
+        background: var(--md-sys-color-surface-container);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: var(--md-sys-color-primary);
+    }
+    .feature-text h3 {
+        margin: 0 0 4px 0;
+        font-size: 16px;
+        font-weight: 700;
+    }
+    .feature-text p {
+        margin: 0;
+        font-size: 14px;
+        color: #666;
+    }
 
-        .appShell{
-        display:flex;
-        flex-direction:column;
-        height:100%;
-        width:100%;
-        }
+    .social-links {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+    .social-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px;
+        background: var(--md-sys-color-surface-container);
+        border-radius: 16px;
+        text-decoration: none;
+        color: var(--md-sys-color-on-surface);
+        font-size: 14px;
+        font-weight: 500;
+        transition: transform 0.2s;
+    }
+    .social-btn:active { transform: scale(0.95); }
 
-        /* MAIN CONTENT */
+    .about-text {
+        font-size: 15px;
+        color: #555;
+        line-height: 1.6;
+    }
 
-        .mainContent{
-        flex:1 0 auto;
-        width:100%;
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        padding:20px 16px;
-        padding-top: calc(20px + env(safe-area-inset-top));
-        }
+    footer {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: var(--md-sys-color-surface);
+        padding: 16px;
+        text-align: center;
+        border-top: 1px solid var(--md-sys-color-outline-variant);
+        z-index: 100;
+    }
 
-        /* HEADER */
+    .footer-content { display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--md-sys-color-on-surface); opacity: 0.8; }
 
-        .hubHeader{
-        width:100%;
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        justify-content:center;
-        padding:30px 0;
-        }
-
-        .hubLogo{
-        width:180px;
-        height:auto;
-        max-width:80vw;
-        object-fit:contain;
-        filter: drop-shadow(0 0 15px rgba(255, 165, 0, 0.2));
-        margin-bottom:15px;
-        }
-
-        .logoTitle{
-        font-size:26px;
-        font-weight:800;
-        color:var(--highlight);
-        letter-spacing:1px;
-        margin:0;
-        text-transform:uppercase;
-        }
-
-        /* CONTAINERS */
-
-        .container{
-        display:flex;
-        align-items:center;
-        background:var(--card-bg);
-        padding:14px;
-        margin-bottom:16px;
-        border-radius:18px;
-        border:1px solid var(--card-border);
-        width:100%;
-        max-width:520px;
-        cursor:pointer;
-        transition:.2s;
-        }
-
-        .container:active{
-        transform:scale(.98);
-        }
-
-        .container img{
-        width:60px;
-        height:60px;
-        object-fit:contain;
-        margin-right:14px;
-        border-radius:12px;
-        border:1px solid var(--highlight);
-        background:#000;
-        }
-
-        /* TEXT */
-
-        .details{
-        flex:1;
-        }
-
-        .details h2{
-        margin:0 0 4px 0;
-        font-size:15px;
-        font-weight:700;
-        color:var(--highlight);
-        }
-
-        .details p{
-        margin:0;
-        font-size:12px;
-        line-height:1.3;
-        opacity:.85;
-        }
-
-        /* FOOTER */
-
-        .coolFooter{
-        flex-shrink:0;
-        padding:24px 10px;
-        background:var(--footer-bg);
-        border-top:1px solid var(--card-border);
-        font-size:14px;
-        width:100%;
-        }
-
-        .footerContent{
-        display:flex;
-        flex-direction:column;
-        justify-content:center;
-        align-items:center;
-        max-width:1100px;
-        margin:auto;
-        gap:8px;
-        text-align:center;
-        }
-
-        .footerBrand{
-        font-weight:bold;
-        color:var(--highlight);
-        }
-
-        .footerInfo{
-        opacity:.8;
-        font-size:13px;
-        }
-
-        .footerInfo a, .details a{
-        color:var(--highlight);
-        text-decoration:none;
-        font-weight:bold;
-        }
-
-        @media (max-width:480px){
-        .container{
-        flex-direction:row; /* Keep row on mobile for about page consistency */
-        }
-        }
-
-    </style>
+    .fab {
+        position: fixed;
+        bottom: 120px;
+        right: 24px;
+        width: 56px;
+        height: 56px;
+        background: var(--md-sys-color-primary);
+        color: white;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 16px rgba(103, 80, 164, 0.3);
+        text-decoration: none;
+        z-index: 90;
+    }
+</style>
 </head>
-
 <body>
-
-<div class="appShell">
-
-    <div class="mainContent">
-
-        <!-- HEADER -->
-
-        <div class="hubHeader">
-            <img class="hubLogo"
-                 src="images/logo/CMPR_Logo.png"
-                 alt="Chessmates Logo">
-            <h1 class="logoTitle">About CMP Ratings</h1>
-        </div>
-
-        <!-- FEATURE 0 -->
-
-        <div class="container" onclick="window.location.href='index.html'">
-            <img src="images/logo/CMPR_Logo.png">
-            <div class="details">
-                <h2>Chessmates Ratings</h2>
-                <p>Chessmates Ratings is a lightweight chess companion designed for quick access to current chess ratings for Chessmates Philippines.</p>
-            </div>
-        </div>
-
-        <!-- FEATURE 2 -->
-
-        <div class="container">
-            <img src="images/logo/gmxian.png">
-            <div class="details">
-                <h2>About the Creator</h2>
-                <p>Created by <a href="https://www.chess.com/member/Mythril_H3mL0cK" target="_blank">Mythril_H3mL0cK</a>. A passionate chess enthusiast dedicated to providing high-quality tools for the chess community.</p>
-            </div>
-        </div>
-
-    </div>
-
-    <footer class="coolFooter">
-        <div class="footerContent">
-            <div class="footerBrand">♞ Chessmates Philippine Ratings</div>
-            <div class="footerInfo">
-                © 2026 All Rights Reserved | Powered by The Lounge
-            </div>
-        </div>
-    </footer>
-
+<div class="app-bar">
+    <a href="index.html" class="back-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>
 </div>
 
+<div class="container">
+    <div class="hero-section">
+        <img src="images/logo/CMPR_Logo.png" class="hero-logo" alt="Chessmates Logo">
+        <div class="version-tag" id="appVersionHero">Version 1.0.1</div>
+    </div>
+
+    <div class="section-title">Our Mission</div>
+    <div class="card">
+        <p class="about-text">
+            Chessmates Philippines is dedicated to empowering the local chess community through data-driven insights and professional rating systems. We strive to provide a fair and transparent platform for players to track their progress and compete at the highest level.
+        </p>
+    </div>
+
+    <div class="section-title">Key Features</div>
+    <div class="card">
+        <div class="feature-item">
+            <div class="icon-box">🏆</div>
+            <div class="feature-text">
+                <h3>Official Rating System</h3>
+                <p>Provides Chessmates in-house rating to be used in all Chessmates tournaments.</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="icon-box">👥</div>
+            <div class="feature-text">
+                <h3>Team Ranking</h3>
+                <p>Ranking of teams based on their accumulated points for the Grand Prix point system.</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="icon-box">👤</div>
+            <div class="feature-text">
+                <h3>Individual Ranking</h3>
+                <p>Ranking based on accumulated points from the Grand Prix point system.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-title">Development</div>
+    <div class="card" style="display: flex; align-items: center; gap: 16px;">
+        <img src="images/logo/gmxian.png" style="width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--md-sys-color-surface-container);" alt="Developer">
+        <div class="feature-text">
+            <h3>Mythril H3mL0cK</h3>
+            <p>Developer</p>
+        </div>
+    </div>
+
+    <div class="section-title">Connect With Us</div>
+    <div class="social-links">
+        <a href="javascript:void(0)" onclick="openExternal('http://chessmatesnj.com/')" class="social-btn">
+            <span>🌐</span> Website
+        </a>
+        <a href="javascript:void(0)" onclick="openExternal('https://www.facebook.com/arthur.macaspac.7')" class="social-btn">
+            <span>📱</span> Facebook
+        </a>
+    </div>
+</div>
+
+<a href="index.html" class="fab"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></a>
+
+<footer>
+    <div class="footer-content">
+        <div style="font-weight: 700;">♞ Chessmates Philippines</div>
+        <div id="appVersionFooter">Version 1.0.1</div>
+        <div style="margin-top: 4px; font-weight: 500;">Powered by Chess Lounge</div>
+    </div>
+</footer>
+
 <script>
-    // Prevent right-click, source view, and dev tools
+    function openExternal(url) {
+        if (window.AndroidApp && window.AndroidApp.openBrowser) {
+            window.AndroidApp.openBrowser(url);
+        } else {
+            window.location.href = url;
+        }
+    }
+
+    if (window.AndroidApp && window.AndroidApp.getAppVersion) {
+        const ver = "Version " + window.AndroidApp.getAppVersion();
+        document.getElementById("appVersionHero").innerText = ver;
+        document.getElementById("appVersionFooter").innerText = ver;
+    }
+    // Prevent context menu
     document.addEventListener('contextmenu', e => e.preventDefault());
-    document.addEventListener('keydown', e => {
-        if (
-            e.key === 'F12' ||
-            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C' || e.key === 'J')) ||
-            (e.ctrlKey && e.key === 'U') ||
-            (e.ctrlKey && e.key === 'S') ||
-            (e.metaKey && e.key === 'u') ||
-            (e.metaKey && e.key === 's')
-        ) {
-            e.preventDefault();
-            return false;
-        }
-    });
-
-    const containers = document.querySelectorAll('.container');
-
-    containers.forEach(container => {
-        const description = container.querySelector('.details p');
-        if(description &&
-           (description.textContent.includes('(Coming Soon)') ||
-            description.textContent.includes('(For Arbiter)') ||
-            description.textContent.includes('(For Pro)'))) {
-
-            container.classList.add('disabled');
-            container.removeAttribute('onclick');
-        }
-    });
 </script>
-
 </body>
 </html>

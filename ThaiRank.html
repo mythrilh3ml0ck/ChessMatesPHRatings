@@ -3,275 +3,216 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Thailand Chess Rankings</title>
+<title>Thai Team - Chessmates PH</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
     :root {
-        --bg-deep: #000000;
-        --bg-card: #111111;
-        --text-main: #FFFFFF;
-        --text-muted: #94A3B8;
-        --orange: #FFA500;
-        --orange-hover: #E69500;
-        --border: #222222;
+        --md-sys-color-surface: #FEF7FF;
+        --md-sys-color-on-surface: #1D1B20;
+        --md-sys-color-primary: #6750A4;
+        --md-sys-color-surface-container: #F3EDF7;
     }
 
-    *, *::before, *::after {
-        box-sizing: border-box;
-        -webkit-tap-highlight-color: transparent;
-    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Roboto', sans-serif; margin: 0; background-color: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); }
 
-    body {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        margin: 0;
-        background-color: #000000;
-        background-image:
-            linear-gradient(45deg, #080808 25%, transparent 25%, transparent 75%, #080808 75%, #080808),
-            linear-gradient(45deg, #080808 25%, transparent 25%, transparent 75%, #080808 75%, #080808);
-        background-size: 60px 60px;
-        background-position: 0 0, 30px 30px;
-        background-attachment: fixed;
-        color: var(--text-main);
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        user-select: none;
-        -webkit-user-select: none;
-    }
+    .top-app-bar { height: 64px; display: flex; align-items: center; padding: 0 16px; position: sticky; top: 0; background: var(--md-sys-color-surface); z-index: 10; border-bottom: 1px solid rgba(0,0,0,0.05); }
+    .back-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; text-decoration: none; color: inherit; }
+    .title { font-size: 20px; font-weight: 500; margin-left: 16px; }
 
-    .container {
-        flex: 1 0 auto;
-        padding: 20px 16px;
-        padding-top: calc(20px + env(safe-area-inset-top));
-        max-width: 480px;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
+    .container { padding: 16px; padding-bottom: 140px; max-width: 600px; margin: 0 auto; }
+    .card { background: var(--md-sys-color-surface-container); border-radius: 28px; padding: 24px; overflow: hidden; }
 
-    .hero-logo {
-        max-width: 150px;
-        width: 100%;
-        margin: 0 auto 20px auto;
-        display: block;
-        border-radius: 16px;
-        box-shadow: 0 12px 40px rgba(0,0,0,0.6);
-        cursor: pointer;
-    }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; color: #444; padding-bottom: 12px; }
+    td { padding: 16px 8px; border-top: 1px solid rgba(0,0,0,0.05); }
+    .team-name { font-weight: 700; color: var(--md-sys-color-primary); }
 
-    .hero-title {
-        font-size: 24px;
-        font-weight: 800;
-        color: var(--orange);
-        margin: 0 auto 24px auto;
-        letter-spacing: -0.02em;
-        line-height: 1.2;
-        text-align: center;
-        width: 100%;
-    }
+    .team-row { cursor: pointer; transition: background-color 0.2s; position: relative; }
+    .team-row:active { background-color: rgba(103, 80, 164, 0.08); }
 
-    .card {
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 12px;
-        margin-top: 16px;
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
+    .rank-num { font-weight: 700; color: #888; width: 24px; }
+    .chevron { transition: transform 0.3s; color: #888; }
+    .team-row.expanded .chevron { transform: rotate(180deg); }
+    .team-row.expanded { background-color: rgba(103, 80, 164, 0.04); }
 
-    .rank-table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 400px;
-    }
-
-    .rank-table th {
-        text-align: left;
-        color: var(--text-muted);
-        font-size: 11px;
-        text-transform: uppercase;
-        padding: 10px 8px;
-        border-bottom: 2px solid var(--border);
-    }
-
-    .rank-table td {
-        padding: 12px 8px;
-        border-bottom: 1px solid var(--border);
+    .details-row { display: none; background: transparent; }
+    .details-container {
+        padding: 0 16px 20px 16px;
         font-size: 13px;
     }
-
-    .team-name {
-        color: var(--orange);
-        font-weight: 700;
+    .details-content {
+        background: white;
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid rgba(103, 80, 164, 0.1);
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
     }
-
-    footer {
-        padding: 40px 20px;
-        text-align: center;
-        border-top: 1px solid var(--border);
-        color: var(--text-muted);
-        font-size: 13px;
-        width: 100%;
+    .details-col { display: flex; flex-direction: column; gap: 6px; }
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 0;
+        border-bottom: 1px solid #f0f0f0;
     }
+    .detail-item:last-child { border-bottom: none; }
+    .detail-label { font-weight: 500; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .detail-value { font-weight: 700; color: var(--md-sys-color-primary); }
 
-    .loading {
-        color: var(--orange);
-        font-weight: 700;
-        margin-top: 50px;
-        text-align: center;
-        max-width: 300px;
-    }
+    .date-text { font-size: 11px; color: #888; margin-top: 2px; font-weight: normal; display: flex; align-items: center; gap: 4px; }
+    .date-text::before { content: '📅'; font-size: 10px; }
+
+    footer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--md-sys-color-surface); padding: 16px; text-align: center; border-top: 1px solid rgba(0,0,0,0.1); z-index: 100; }
+    .footer-content { display: flex; flex-direction: column; gap: 2px; font-size: 11px; opacity: 0.8; }
+
+    .fab { position: fixed; bottom: 140px; right: 24px; width: 56px; height: 56px; background: var(--md-sys-color-primary); color: white; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); text-decoration: none; z-index: 90; }
 </style>
 </head>
-<body oncontextmenu="return false;">
-
+<body>
+<div class="top-app-bar">
+    <a href="index.html" class="back-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>
+    <div class="title">Team Ranking for Thailand</div>
+</div>
 <div class="container">
-    <img src="images/logo/CMPR_Logo.png"
-         class="hero-logo"
-         onclick="window.location.href='index.html'"
-         alt="Logo">
-
-    <h1 class="hero-title">Thailand Chess Rankings</h1>
-
-    <div id="loading" class="loading">Loading Rankings...</div>
-
+    <div id="loading" style="text-align:center; padding:40px;">♞ Loading...</div>
     <div class="card" id="rankCard" style="display: none;">
-        <table class="rank-table">
-            <thead>
-                <tr>
-                    <th>Rank</th>
-                    <th>Team</th>
-                    <th>Points</th>
-                </tr>
-            </thead>
+        <table>
+            <thead><tr><th>Rank</th><th>Team</th><th style="text-align:right">Points</th></tr></thead>
             <tbody id="rankBody"></tbody>
         </table>
     </div>
 </div>
 
+<a href="index.html" class="fab"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></a>
+
 <footer>
-    © 2026 All rights reserved <br> Powered by The Lounge & Chess Lounge
+    <div class="footer-content">
+        <div style="font-weight: 700;">♞ Chessmates Philippines</div>
+        <div id="appVersionFooter">Version 1.0.1</div>
+        <div style="font-weight: 500;">Powered by Chess Lounge</div>
+    </div>
 </footer>
 
 <script>
-// Prevent right-click, source view, and dev tools
-document.addEventListener('contextmenu', e => e.preventDefault());
-document.addEventListener('keydown', e => {
-    if (
-        e.key === 'F12' ||
-        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C' || e.key === 'J')) ||
-        (e.ctrlKey && e.key === 'U') ||
-        (e.ctrlKey && e.key === 'S')
-    ) {
-        e.preventDefault();
-        return false;
-    }
-});
-
 const csvURL = "https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/CMP/otherDB/CMThaiRankDB.csv";
 
-async function loadRankings() {
-    const loadingEl = document.getElementById("loading");
+function toggleDetails(index) {
+    const row = document.getElementById(`row-${index}`);
+    const details = document.getElementById(`details-${index}`);
+    if (details.style.display === "table-row") {
+        details.style.display = "none";
+        row.classList.remove("expanded");
+    } else {
+        details.style.display = "table-row";
+        row.classList.add("expanded");
+    }
+}
+
+async function load() {
     try {
-        // cache: "no-store" ensures we get the latest data from GitHub
-        const res = await fetch(csvURL + "?v=" + Date.now(), { cache: "no-store" });
-        if (!res.ok) throw new Error("HTTP " + res.status);
-
+        const res = await fetch(csvURL + "?v=" + Date.now());
         const text = await res.text();
-        if (!text || text.trim().length === 0) {
-            loadingEl.innerText = "The ranking file is empty.";
-            return;
-        }
+        const lines = text.trim().split("\n").filter(l => l.length > 0);
+        const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
 
-        const data = parseCSV(text);
-        if (data.length === 0) {
-            loadingEl.innerHTML = "No ranking data found in file.<br><small style='color:#666'>Format: Rank,Team,Points</small>";
-        } else {
-            displayRankings(data);
-        }
-    } catch (e) {
-        loadingEl.innerText = "Error: " + e.message;
-        console.error("Load Error:", e);
-    }
-}
+        // Find indices for key columns
+        const teamIdx = headers.findIndex(h => h.includes("team"));
+        const totalIdx = headers.findIndex(h => h.includes("total"));
+        const dateIdx = headers.findIndex(h => h.includes("date"));
 
-function parseCSV(text) {
-    if (!text) return [];
-
-    // BULLETPROOF PARSER:
-    // If the file is missing newlines (all on one line), we restore them.
-    // Pattern: Find where one row ends and the next starts (e.g., "...Points 2,Team,Points...")
-    let raw = text.trim();
-    const hasNewlines = raw.includes("\n") || raw.includes("\r");
-
-    if (!hasNewlines && raw.includes(",")) {
-        // Try to insert newlines before every "number followed by a comma"
-        // EXCEPT for the very first one (the header/rank 1).
-        // e.g., "Rank,Team,Points 1,T1,100 2,T2,200"
-        raw = raw.replace(/(\S+)\s+(\d+,)/g, "$1\n$2");
-    }
-
-    const lines = raw.split(/\r?\n/).filter(l => l.trim().length > 0);
-    if (lines.length < 1) return [];
-
-    // The first line is our header
-    const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
-
-    return lines.slice(1).map((line) => {
-        const values = [];
-        let cur = '';
-        let q = false;
-        for (let i = 0; i < line.length; i++) {
-            if (line[i] === '"') q = !q;
-            else if (line[i] === ',' && !q) { values.push(cur.trim()); cur = ''; }
-            else cur += line[i];
-        }
-        values.push(cur.trim());
-
-        let obj = {};
-        headers.forEach((h, i) => {
-            if (h) {
-                // If the header name got merged with the first data cell (e.g. "points 1")
-                const cleanH = h.replace(/\s+\d+$/, "");
-                obj[cleanH] = (values[i] || "").replace(/^"|"$/g, '').trim();
+        const data = lines.slice(1).map(l => {
+            const values = [];
+            let current = "";
+            let inQuotes = false;
+            for (let i = 0; i < l.length; i++) {
+                if (l[i] === '"') inQuotes = !inQuotes;
+                else if (l[i] === ',' && !inQuotes) {
+                    values.push(current.trim());
+                    current = "";
+                } else current += l[i];
             }
+            values.push(current.trim());
+
+            let obj = {};
+            headers.forEach((h, i) => {
+                let val = values[i] || "";
+                if (val.startsWith('"') && val.endsWith('"')) val = val.substring(1, val.length - 1);
+                obj[h] = val;
+            });
+
+            // Assign canonical names for convenience
+            obj._team = teamIdx !== -1 ? obj[headers[teamIdx]] : "Unknown";
+            obj._total = totalIdx !== -1 ? (parseFloat(obj[headers[totalIdx]]) || 0) : 0;
+            obj._date = dateIdx !== -1 ? obj[headers[dateIdx]] : "";
+
+            return obj;
         });
-        return obj;
-    });
+
+        // Sorting: Rank by Total (Points) descending, then alphabetical by Team
+        data.sort((a, b) => {
+            if (b._total !== a._total) return b._total - a._total;
+            return a._team.localeCompare(b._team);
+        });
+
+        const tbody = document.getElementById("rankBody");
+        tbody.innerHTML = data.map((p, i) => {
+            return `
+                <tr id="row-${i}" class="team-row" onclick="toggleDetails(${i})">
+                    <td class="rank-num">${i + 1}</td>
+                    <td>
+                        <div class="team-name">${p._team}</div>
+                        ${p._date ? `<div class="date-text">${p._date}</div>` : ""}
+                    </td>
+                    <td style="text-align:right">
+                        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                            <span style="font-weight: 700;">${p._total}</span>
+                            <span class="chevron">▼</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr id="details-${i}" class="details-row">
+                    <td colspan="3">
+                        <div class="details-container">
+                            <div class="details-content">
+                                <div class="details-col">
+                                    <div class="detail-item"><span class="detail-label">Champion</span> <span class="detail-value">${p.champion || 0}</span></div>
+                                    <div class="detail-item"><span class="detail-label">2nd</span> <span class="detail-value">${p['2nd'] || 0}</span></div>
+                                    <div class="detail-item"><span class="detail-label">3rd</span> <span class="detail-value">${p['3rd'] || 0}</span></div>
+                                    <div class="detail-item"><span class="detail-label">4th</span> <span class="detail-value">${p['4th'] || 0}</span></div>
+                                    <div class="detail-item"><span class="detail-label">5th</span> <span class="detail-value">${p['5th'] || 0}</span></div>
+                                    <div class="detail-item"><span class="detail-label">6th</span> <span class="detail-value">${p['6th'] || 0}</span></div>
+                                </div>
+                                <div class="details-col">
+                                    <div class="detail-item"><span class="detail-label">7th</span> <span class="detail-value">${p['7th'] || 0}</span></div>
+                                    <div class="detail-item"><span class="detail-label">8th</span> <span class="detail-value">${p['8th'] || 0}</span></div>
+                                    <div class="detail-item"><span class="detail-label">9th</span> <span class="detail-value">${p['9th'] || 0}</span></div>
+                                    <div class="detail-item"><span class="detail-label">10th</span> <span class="detail-value">${p['10th'] || 0}</span></div>
+                                    <div class="detail-item"><span class="detail-label">Category</span> <span class="detail-value">${p.category || 0}</span></div>
+                                    <div class="detail-item"><span class="detail-label">Participation</span> <span class="detail-value">${p.participation || 0}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join("");
+
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("rankCard").style.display = "block";
+    } catch (e) {
+        console.error(e);
+        document.getElementById("loading").innerText = "Error loading data";
+    }
+
+    if (window.AndroidApp && window.AndroidApp.getAppVersion) {
+        document.getElementById("appVersionFooter").innerText = "Version " + window.AndroidApp.getAppVersion();
+    }
 }
-
-function displayRankings(data) {
-    const tbody = document.getElementById("rankBody");
-    tbody.innerHTML = "";
-
-    data.forEach((p, index) => {
-        const tr = document.createElement("tr");
-
-        const rankCell = document.createElement("td");
-        rankCell.innerText = p.rank || (index + 1);
-
-        const teamCell = document.createElement("td");
-        teamCell.className = "team-name";
-        teamCell.innerText = p.team || "Unknown";
-
-        const pointsCell = document.createElement("td");
-        pointsCell.innerText = p.points || "0";
-
-        tr.appendChild(rankCell);
-        tr.appendChild(teamCell);
-        tr.appendChild(pointsCell);
-
-        tbody.appendChild(tr);
-    });
-
-    document.getElementById("loading").style.display = "none";
-    document.getElementById("rankCard").style.display = "block";
-}
-
-loadRankings();
+load();
 </script>
 </body>
 </html>

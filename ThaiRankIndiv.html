@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Tournaments - Chessmates PH</title>
+<title>Thai Indiv - Chessmates PH</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
     :root {
@@ -26,21 +26,9 @@
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
     th { text-align: left; color: #444; padding-bottom: 12px; }
     td { padding: 16px 8px; border-top: 1px solid rgba(0,0,0,0.05); }
-    .tournament-name { font-weight: 700; color: var(--md-sys-color-primary); }
-    .tournament-link { color: var(--md-sys-color-primary); text-decoration: underline; font-weight: 600; }
+    .player-name { font-weight: 700; color: var(--md-sys-color-primary); }
 
-    footer {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: var(--md-sys-color-surface);
-        padding: 16px;
-        text-align: center;
-        border-top: 1px solid rgba(0,0,0,0.1);
-        z-index: 100;
-    }
-
+    footer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--md-sys-color-surface); padding: 16px; text-align: center; border-top: 1px solid rgba(0,0,0,0.1); z-index: 100; }
     .footer-content { display: flex; flex-direction: column; gap: 2px; font-size: 11px; opacity: 0.8; }
 
     .fab { position: fixed; bottom: 140px; right: 24px; width: 56px; height: 56px; background: var(--md-sys-color-primary); color: white; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); text-decoration: none; z-index: 90; }
@@ -49,14 +37,14 @@
 <body>
 <div class="top-app-bar">
     <a href="index.html" class="back-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>
-    <div class="title">Rated Tournaments</div>
+    <div class="title">Individual Ranking for Thailand</div>
 </div>
 <div class="container">
     <div id="loading" style="text-align:center; padding:40px;">♞ Loading...</div>
-    <div class="card" id="tournamentCard" style="display: none;">
+    <div class="card" id="rankCard" style="display: none;">
         <table>
-            <thead><tr><th>Date</th><th>Tournament Name</th><th style="text-align:right">Link</th></tr></thead>
-            <tbody id="tournamentBody"></tbody>
+            <thead><tr><th>Rank</th><th>Player</th><th style="text-align:right">Rating</th></tr></thead>
+            <tbody id="rankBody"></tbody>
         </table>
     </div>
 </div>
@@ -72,63 +60,23 @@
 </footer>
 
 <script>
-const csvURL = "https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/CMP/otherDB/CMTournamentDB.csv";
-
-function parseCSVLine(line) {
-    const values = [];
-    let current = "";
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-        if (line[i] === '"') inQuotes = !inQuotes;
-        else if (line[i] === ',' && !inQuotes) {
-            values.push(current.trim());
-            current = "";
-        } else current += line[i];
-    }
-    values.push(current.trim());
-    return values.map(v => v.replace(/^"|"$/g, '').trim());
-}
-
+const csvURL = "https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/CMP/otherDB/CMThaiRankIndivDB.csv";
 async function load() {
     try {
         const res = await fetch(csvURL + "?v=" + Date.now());
         const text = await res.text();
-        const lines = text.trim().split("\n").filter(l => l.trim().length > 0);
-
-        const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().replace(/[^a-z]/g, ''));
-        const dateIdx = headers.indexOf('date');
-        const tourIdx = headers.indexOf('tournament');
-        const urlIdx = headers.indexOf('url');
-
+        const lines = text.trim().split("\n").filter(l => l.length > 0);
+        const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
         const data = lines.slice(1).map(l => {
-            const v = parseCSVLine(l);
-            return {
-                date: dateIdx !== -1 ? v[dateIdx] : "",
-                tournament: tourIdx !== -1 ? v[tourIdx] : "",
-                url: urlIdx !== -1 ? v[urlIdx] : ""
-            };
+            const v = l.split(",");
+            let obj = {}; headers.forEach((h, i) => obj[h] = v[i]?.trim() || "");
+            return obj;
         });
-
-        // Sorting: Newest date first (assuming they follow the format Month Day, Year)
-        data.sort((a,b) => new Date(b.date) - new Date(a.date));
-
-        const tbody = document.getElementById("tournamentBody");
-        tbody.innerHTML = data.map(t => `
-            <tr>
-                <td>${t.date}</td>
-                <td class="tournament-name">${t.tournament}</td>
-                <td style="text-align:right">
-                    ${t.url && t.url !== "0" && t.url !== "" ? '<a href="'+t.url+'" target="_blank" class="tournament-link">View</a>' : '-'}
-                </td>
-            </tr>
-        `).join("");
-
+        const tbody = document.getElementById("rankBody");
+        tbody.innerHTML = data.map((p, i) => `<tr><td>${p.rank || i+1}</td><td class="player-name">${p.player || p.name}</td><td style="text-align:right">${p.rating || p.points}</td></tr>`).join("");
         document.getElementById("loading").style.display = "none";
-        document.getElementById("tournamentCard").style.display = "block";
-    } catch (e) {
-        console.error(e);
-        document.getElementById("loading").innerText = "Error loading data";
-    }
+        document.getElementById("rankCard").style.display = "block";
+    } catch (e) { document.getElementById("loading").innerText = "Data coming soon"; }
 
     if (window.AndroidApp && window.AndroidApp.getAppVersion) {
         document.getElementById("appVersionFooter").innerText = "Version " + window.AndroidApp.getAppVersion();
