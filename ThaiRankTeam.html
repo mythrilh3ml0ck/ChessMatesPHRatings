@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Individual Ranking - Chessmates PH</title>
+<title>Thai Team - Chessmates PH</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
     :root {
@@ -26,15 +26,15 @@
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
     th { text-align: left; color: #444; padding-bottom: 12px; }
     td { padding: 16px 8px; border-top: 1px solid rgba(0,0,0,0.05); }
-    .player-name { font-weight: 700; color: var(--md-sys-color-primary); }
+    .team-name { font-weight: 700; color: var(--md-sys-color-primary); }
 
-    .player-row { cursor: pointer; transition: background-color 0.2s; position: relative; }
-    .player-row:active { background-color: rgba(103, 80, 164, 0.08); }
+    .team-row { cursor: pointer; transition: background-color 0.2s; position: relative; }
+    .team-row:active { background-color: rgba(103, 80, 164, 0.08); }
 
     .rank-num { font-weight: 700; color: #888; width: 24px; }
     .chevron { transition: transform 0.3s; color: #888; }
-    .player-row.expanded .chevron { transform: rotate(180deg); }
-    .player-row.expanded { background-color: rgba(103, 80, 164, 0.04); }
+    .team-row.expanded .chevron { transform: rotate(180deg); }
+    .team-row.expanded { background-color: rgba(103, 80, 164, 0.04); }
 
     .details-row { display: none; background: transparent; }
     .details-container {
@@ -69,22 +69,24 @@
     footer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--md-sys-color-surface); padding: 16px; text-align: center; border-top: 1px solid rgba(0,0,0,0.1); z-index: 100; }
     .footer-content { display: flex; flex-direction: column; gap: 2px; font-size: 11px; opacity: 0.8; }
 
+    .fab { position: fixed; bottom: 140px; right: 24px; width: 56px; height: 56px; background: var(--md-sys-color-primary); color: white; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); text-decoration: none; z-index: 90; }
 </style>
 </head>
 <body>
 <div class="top-app-bar">
     <a href="index.html" class="back-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>
-    <div class="title">Individual Ranking for Thailand</div>
+    <div class="title">Team Ranking for Thailand</div>
 </div>
 <div class="container">
     <div id="loading" style="text-align:center; padding:40px;">♞ Loading...</div>
     <div class="card" id="rankCard" style="display: none;">
         <table>
-            <thead><tr><th>Rank</th><th>Player</th><th style="text-align:right">Points</th></tr></thead>
+            <thead><tr><th>Rank</th><th>Team</th><th style="text-align:right">Points</th></tr></thead>
             <tbody id="rankBody"></tbody>
         </table>
     </div>
 </div>
+
 
 <footer>
     <div class="footer-content">
@@ -95,7 +97,7 @@
 </footer>
 
 <script>
-const csvURL = "https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/CMP/otherDB/CMThaiRankIndiDB.csv";
+const csvURL = "https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/CMP/otherDB/CMThaiRankTeamDB.csv";
 
 function toggleDetails(index) {
     const row = document.getElementById(`row-${index}`);
@@ -117,8 +119,8 @@ async function load() {
         const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
 
         // Find indices for key columns
-        const playerIdx = headers.findIndex(h => h.includes("player") || h.includes("name"));
-        const totalIdx = headers.findIndex(h => h.includes("total") || h.includes("points") || h.includes("rating"));
+        const teamIdx = headers.findIndex(h => h.includes("team"));
+        const totalIdx = headers.findIndex(h => h.includes("total"));
         const dateIdx = headers.findIndex(h => h.includes("date"));
 
         const data = lines.slice(1).map(l => {
@@ -142,26 +144,26 @@ async function load() {
             });
 
             // Assign canonical names for convenience
-            obj._player = playerIdx !== -1 ? obj[headers[playerIdx]] : "Unknown";
+            obj._team = teamIdx !== -1 ? obj[headers[teamIdx]] : "Unknown";
             obj._total = totalIdx !== -1 ? (parseFloat(obj[headers[totalIdx]]) || 0) : 0;
             obj._date = dateIdx !== -1 ? obj[headers[dateIdx]] : "";
 
             return obj;
         });
 
-        // Sorting: Rank by Total descending
+        // Sorting: Rank by Total (Points) descending, then alphabetical by Team
         data.sort((a, b) => {
             if (b._total !== a._total) return b._total - a._total;
-            return a._player.localeCompare(b._player);
+            return a._team.localeCompare(b._team);
         });
 
         const tbody = document.getElementById("rankBody");
         tbody.innerHTML = data.map((p, i) => {
             return `
-                <tr id="row-${i}" class="player-row" onclick="toggleDetails(${i})">
+                <tr id="row-${i}" class="team-row" onclick="toggleDetails(${i})">
                     <td class="rank-num">${i + 1}</td>
                     <td>
-                        <div class="player-name">${p._player}</div>
+                        <div class="team-name">${p._team}</div>
                         ${p._date ? `<div class="date-text">${p._date}</div>` : ""}
                     </td>
                     <td style="text-align:right">
