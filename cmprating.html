@@ -73,7 +73,7 @@
         <button onclick="goBack()" style="width:100%; height:52px; border-radius:100px; border:none; background:var(--md-sys-color-surface-container); color:var(--md-sys-color-primary); font-weight:700; cursor:pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">Back to Search</button>
     </div>
 </div>
-<footer><div class="footer-content"><div style="font-weight: 700;">♞ Chessmates Philippines</div><div id="appVersionFooter">Version 1.0.1</div><div style="font-weight: 500;">Powered by Chess Lounge</div></div></footer>
+<footer><div class="footer-content"><div style="font-weight: 700;">♞ Chessmates Philippines</div><div id="appVersionFooter">Version 1.0.6</div><div style="font-weight: 500;">Powered by Chess Lounge</div></div></footer>
 <script>
 let masterIndex = [];
 const DB_NAME = "RatingDB";
@@ -107,7 +107,14 @@ async function init() {
 }
 let matches = [];
 let searchTimeout;
-document.getElementById("searchBox").addEventListener("input", function() {
+const sb = document.getElementById("searchBox");
+sb.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        this.blur();
+    }
+});
+sb.addEventListener("input", function() {
     clearTimeout(searchTimeout);
     const q = this.value.trim();
     const res = document.getElementById("results");
@@ -125,8 +132,8 @@ document.getElementById("searchBox").addEventListener("input", function() {
             if (hasComma) {
                 // RULE: If comma exists, Last Name must match EXACTLY
                 if (pLN !== qLN) return false;
-                // If First Name part exists, it must be contained in player's First Name
-                if (qFN !== "" && !pFN.includes(qFN)) return false;
+                // If First Name part exists, it must START WITH player's First Name
+                if (qFN !== "" && !pFN.startsWith(qFN)) return false;
                 return true;
             } else {
                 // RULE: If no comma, check if either name starts with query
@@ -136,10 +143,13 @@ document.getElementById("searchBox").addEventListener("input", function() {
         }).sort((a, b) => {
             if (a.isH && !b.isH) return -1;
             if (!a.isH && b.isH) return 1;
-            const aExact = a.nLN === qLN;
-            const bExact = b.nLN === qLN;
-            if (aExact && !bExact) return -1;
-            if (!aExact && bExact) return 1;
+
+            const aMatch = hasComma ? (a.nLN === qLN) : a.nLN.startsWith(queryClean);
+            const bMatch = hasComma ? (b.nLN === qLN) : b.nLN.startsWith(queryClean);
+
+            if (aMatch && !bMatch) return -1;
+            if (!aMatch && bMatch) return 1;
+
             return a.nLN.localeCompare(b.nLN) || a.nFN.localeCompare(b.nFN);
         }).slice(0, 100);
 
