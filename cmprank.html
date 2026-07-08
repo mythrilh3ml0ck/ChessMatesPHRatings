@@ -27,6 +27,8 @@
     .input-group label { font-size: 12px; font-weight: 700; color: var(--md-sys-color-primary); margin-left: 8px; }
     input { width: 100%; height: 48px; background: white; border: 2px solid transparent; border-radius: 12px; padding: 0 16px; font-size: 16px; outline: none; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     input:focus { border-color: var(--md-sys-color-primary); }
+    input.error { border-color: #BA1A1A; background-color: #FFF0F0; }
+    .error-msg { color: #BA1A1A; font-size: 10px; font-weight: 700; margin-left: 8px; display: none; }
 
     .rank-list { display: flex; flex-direction: column; gap: 8px; }
     .rank-item { background: white; border-radius: 16px; padding: 16px; display: flex; align-items: center; cursor: pointer; border: 1px solid rgba(0,0,0,0.05); transition: background 0.2s; }
@@ -61,11 +63,12 @@
         <div class="filter-wrapper">
             <div class="input-group">
                 <label for="minRating">Min Rating</label>
-                <input type="number" id="minRating" value="0">
+                <input type="number" id="minRating" value="0" maxlength="4" oninput="validateInput(this)">
             </div>
             <div class="input-group">
                 <label for="maxRating">Max Rating</label>
-                <input type="number" id="maxRating" value="3000">
+                <input type="number" id="maxRating" value="3000" maxlength="4" oninput="validateInput(this)">
+                <div id="rangeError" class="error-msg">Max must be ≥ Min</div>
             </div>
         </div>
         <div class="rank-list" id="rankList"></div>
@@ -118,9 +121,27 @@ async function init() {
     }
 }
 
+function validateInput(el) {
+    if (el.value.length > 4) el.value = el.value.slice(0, 4);
+}
+
 function updateRankList() {
-    const min = parseInt(document.getElementById("minRating").value) || 0;
-    const max = parseInt(document.getElementById("maxRating").value) || 3000;
+    const minInput = document.getElementById("minRating");
+    const maxInput = document.getElementById("maxRating");
+    const errorMsg = document.getElementById("rangeError");
+
+    const min = parseInt(minInput.value) || 0;
+    const max = parseInt(maxInput.value) || 0;
+
+    if (max < min && minInput.value !== "" && maxInput.value !== "") {
+        minInput.classList.add("error");
+        maxInput.classList.add("error");
+        errorMsg.style.display = "block";
+    } else {
+        minInput.classList.remove("error");
+        maxInput.classList.remove("error");
+        errorMsg.style.display = "none";
+    }
 
     filteredPlayers = masterIndex.filter(p => {
         const r = parseInt(p.prR) || 0;

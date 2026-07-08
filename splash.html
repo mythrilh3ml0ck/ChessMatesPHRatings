@@ -355,6 +355,14 @@ async function sync() {
             document.getElementById("versionText").innerText = "Version " + window.AndroidApp.getAppVersion();
         }
 
+        // Check if already cached
+        const cachedIndex = await getFromDB("master_index");
+        if (cachedIndex) {
+            updateUI(100, "Loading cache...");
+            enterApp();
+            return;
+        }
+
         updateUI(5, "Connecting to Chessmates Server...");
 
         const csvCache = {};
@@ -377,12 +385,12 @@ async function sync() {
                     }
                 } catch (e) {}
                 loaded++;
-                updateUI(10 + (loaded / monthlyFiles.length * 60), `Syncing ${file.name.split('_')[0]}...`);
+                updateUI(10 + (loaded / monthlyFiles.length * 50), `Syncing ${file.name.split('_')[0]}...`);
             }
         } catch (e) { console.error(e); }
 
         try {
-            updateUI(80, "Updating National Database...");
+            updateUI(70, "Updating National Database...");
             const nData = await getJSON(nationalAPI);
             const natFile = nData.find(f => f.name.toLowerCase() === "phrapid.csv") ||
                            nData.find(f => f.name.toLowerCase() === "phratings.csv") ||
@@ -391,10 +399,29 @@ async function sync() {
                 const rRes = await fetch(natFile.download_url);
                 if (rRes.ok) {
                     csvCache["PHRapid.csv"] = parseCSV(await rRes.text());
-                    updateUI(90, "National data updated!");
                 }
             }
         } catch (e) { console.error(e); }
+
+        // Additional Caching for Rankings and Tournaments
+        try {
+            updateUI(80, "Caching Rankings & Tournaments...");
+            const teamUrl = "https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/CMP/otherDB/CMThaiRankTeamDB.csv";
+            const indivUrl = "https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/CMP/otherDB/CMThaiRankIndiDB.csv";
+            const tourUrl = "https://raw.githubusercontent.com/mythrilh3ml0ck/ChessMatesPHRatings/main/CMP/otherDB/CMTournamentDB.csv";
+
+            const [teamTxt, indivTxt, tourTxt] = await Promise.all([
+                fetch(teamUrl).then(r => r.text()),
+                fetch(indivUrl).then(r => r.text()),
+                fetch(tourUrl).then(r => r.text())
+            ]);
+
+            await Promise.all([
+                saveToDB("team_rank_csv", teamTxt),
+                saveToDB("indiv_rank_csv", indivTxt),
+                saveToDB("tournaments_csv", tourTxt)
+            ]);
+        } catch (e) { console.error("Extra cache failed", e); }
 
         if (Object.keys(csvCache).length === 0) throw new Error("No data.");
         updateUI(95, "Optimizing Local Storage...");
@@ -405,6 +432,19 @@ async function sync() {
         updateUI(50, "Sync Error", true);
         if (localStorage.getItem("has_synced") === "true") enterApp();
     }
+}
+
+// Helper to check if key exists in IndexedDB
+function getFromDB(key) {
+    return openDB().then(db => {
+        return new Promise((resolve) => {
+            if (!db.objectStoreNames.contains(STORE_NAME)) { resolve(null); return; }
+            const tx = db.transaction(STORE_NAME, "readonly");
+            const req = tx.objectStore(STORE_NAME).get(key);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => resolve(null);
+        });
+    });
 }
 document.addEventListener('DOMContentLoaded', sync);
 </script>
